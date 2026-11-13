@@ -1,6 +1,7 @@
 """Offline deterministic filename rules; confidence is a rule label, not AI."""
 from dataclasses import dataclass
 import re
+import unicodedata
 from pathlib import Path
 
 
@@ -21,7 +22,7 @@ def category_path(value):
     for part in parts:
         if (not part or part in (".", "..") or part != part.strip() or part.endswith(".")
                 or any(ord(c) < 32 or c in '<>:"|?*' for c in part)
-                or part.split(".")[0].upper() in reserved):
+                or unicodedata.normalize("NFKC", part.split(".")[0]).rstrip().upper() in reserved):
             raise ValueError("Category contains an invalid or reserved Windows folder name.")
     return "/".join(parts)
 

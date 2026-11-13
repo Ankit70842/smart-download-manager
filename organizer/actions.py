@@ -42,8 +42,14 @@ def handle(app, fields):
         if not app.folder:
             raise ValueError("Enter a folder path first.")
         app.plan = preview(app.folder, app.settings.load())
+        for entry in app.plan.entries:
+            if entry.source.resolve() in app.history.protected_paths:
+                entry.skip_reason = "Active application journal or sidecar"
+                entry.selected = False
         eligible = sum(not entry.skip_reason for entry in app.plan.entries)
         app.message = f"Preview ready: {eligible} eligible files. No files moved. Choose where files go next."
+        if app.plan.truncated:
+            app.message += f" Showing the first {len(app.plan.entries)} of {app.plan.total_entries} top-level items; remaining items are not selected or processed."
     elif action == "destination":
         require_plan(app, fields)
         mode = value(fields, "mode")

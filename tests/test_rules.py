@@ -35,7 +35,7 @@ class RuleTests(unittest.TestCase):
         from organizer.rules import classify
         with TemporaryDirectory() as directory:
             store = Settings(Path(directory) / "settings.sqlite")
-            for name in ["../escape", "Studies/CON.txt", "Bad:name", "Bad\\name", "Trailing.", "media"]:
+            for name in ["../escape", "Studies/CON.txt", "Bad:name", "Bad\\name", "Trailing.", "media", "COM¹.txt"]:
                 with self.subTest(name=name), self.assertRaises(ValueError):
                     store.add_category(name)
             store.save_rule("first", "Projects", ["robot"], [], 200)

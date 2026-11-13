@@ -1,4 +1,5 @@
 from pathlib import Path
+from contextlib import closing
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
@@ -77,7 +78,7 @@ class HistoryTests(unittest.TestCase):
         (self.folder / "Documents").mkdir()
         destination = self.folder / "Documents" / original.name
         destination.write_bytes(b"legacy contents")
-        with sqlite3.connect(database) as db:
+        with closing(sqlite3.connect(database)) as db, db:
             db.execute("CREATE TABLE moves (id INTEGER PRIMARY KEY, batch TEXT, source TEXT, destination TEXT, digest TEXT, state TEXT, error TEXT DEFAULT '')")
             db.execute("INSERT INTO moves VALUES (1,?,?,?,?,?,?)", ("legacy-batch", str(original), str(destination), hashlib.sha256(b"legacy contents").hexdigest(), "moved", ""))
         history = History(database)
@@ -89,6 +90,15 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual(history.rows()[0]["state"], "undone")
         finally:
             history.close()
+
+    def test_active_application_journal_is_never_organized(self):
+        plan = scan(self.root)
+        self.history.apply(plan)
+        self.assertTrue((self.root / "history.sqlite").exists())
+        row = next(row for row in self.history.rows() if Path(row["source"]).name == "history.sqlite")
+        self.assertEqual(row["state"], "failed")
+        self.assertIn("application journal", row["error"])
+        self.assertFalse((self.root / "Other" / "history.sqlite").exists())
 
     def test_apply_skips_a_file_replaced_after_preview(self):
         source = self.folder / "a.txt"

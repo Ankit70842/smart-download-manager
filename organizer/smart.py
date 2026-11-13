@@ -37,6 +37,8 @@ class Preview:
     source: Path
     entries: list[Entry] = field(default_factory=list)
     destination_root: Path | None = None
+    total_entries: int = 0
+    truncated: bool = False
 
     def choose_destination(self, root):
         root = folder_root(root)
@@ -80,10 +82,13 @@ class Preview:
         return result
 
 
-def preview(folder, settings):
+def preview(folder, settings, limit=1000):
     root = folder_root(folder)
     plan = Preview(root)
-    for source in sorted(root.iterdir(), key=lambda p: p.name.casefold()):
+    paths = sorted(root.iterdir(), key=lambda p: p.name.casefold())
+    plan.total_entries = len(paths)
+    plan.truncated = len(paths) > limit
+    for source in paths[:limit]:
         entry = Entry(source)
         try:
             if source.is_symlink() or (hasattr(source, "is_junction") and source.is_junction()):

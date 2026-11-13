@@ -4,6 +4,18 @@ import unittest
 
 
 class SmartTests(unittest.TestCase):
+    def test_large_scan_reports_its_preview_limit_instead_of_silently_dropping_files(self):
+        from organizer.smart import preview
+        from organizer.rules import default_settings
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            for name in ["CN.pdf", "DBMS.pdf", "Maths.pdf"]:
+                (root / name).write_text("notes")
+            plan = preview(root, default_settings(), limit=2)
+            self.assertEqual(len(plan.entries), 2)
+            self.assertEqual(plan.total_entries, 3)
+            self.assertTrue(plan.truncated)
+
     @unittest.skipUnless(__import__('os').name == 'nt', 'Windows file sharing behavior')
     def test_windows_readable_but_delete_locked_file_is_skipped_before_linking(self):
         from organizer.smart import preview

@@ -48,6 +48,8 @@ def transfer(source: Path, destination: Path, on_ready=None):
 
 class History:
     def __init__(self, database: Path):
+        self.database = database.resolve()
+        self.protected_paths = {self.database, *(Path(str(self.database) + suffix) for suffix in (".lock", "-wal", "-shm", "-journal"))}
         database.parent.mkdir(parents=True, exist_ok=True)
         self.lock_path = str(database) + ".lock"
         self.db = sqlite3.connect(database)
@@ -93,6 +95,8 @@ class History:
             row_id = None
             operation = "Validate source and destination"
             try:
+                if source.resolve() in self.protected_paths:
+                    raise ValueError("Active application journal or sidecar cannot be organized.")
                 if source.is_symlink() or not source.is_file():
                     raise ValueError("Source is missing or is not a regular file.")
                 if move.signature is None or file_signature(source) != move.signature:
