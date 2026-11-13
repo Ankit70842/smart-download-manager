@@ -24,15 +24,15 @@ Python 3.12+, no third-party runtime dependencies for these entry points.
 `app.py` and `requirements.txt` remain in source as experimental, unsupported
 Streamlit material. They are not the running UI or a tested installation target.
 
-## License recommendation — approval required
+## Approved license
 
-Recommend the MIT License for a small educational utility intended for broad
-reuse: it is short and permissive, with preservation of copyright/license notices.
+The owner approved the MIT License for this utility. It is short and permissive,
+with preservation of copyright/license notices.
 See [MIT license summary](https://choosealicense.com/licenses/mit/).
 
-Proposed copyright holder: Ankit Chaurasia; year: 2026. Confirm those details and
-approve MIT before adding `LICENSE`. No license file has been added, and no
-open-source license claim is made in repository metadata.
+The root `LICENSE` contains the standard MIT text with
+`Copyright (c) 2026 Ankit Chaurasia`. License approval does not authorize creating
+a remote repository, pushing commits, or publishing a release.
 
 ## Publication checks
 

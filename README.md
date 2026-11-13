@@ -167,10 +167,9 @@ filtering. Duplicate deletion is deliberately outside the current scope.
 ## Attribution and publication
 
 Demo records are generated locally. Python's standard library, HTML/CSS, and
-SQLite power the default application; Streamlit is optional. No project license
-has been selected yet. A license will be added only after the owner's approval;
-the project is not currently offered under an open-source license. GitHub
-publication also requires explicit approval. See
+SQLite power the default application; Streamlit is optional. This project is
+licensed under the [MIT License](LICENSE), Copyright (c) 2026 Ankit Chaurasia.
+GitHub publication requires separate explicit approval. See
 [publication proposal](PUBLICATION.md) for suggested repository metadata and scope.
 
 ## Interview explanation
