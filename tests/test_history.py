@@ -76,11 +76,17 @@ class HistoryTests(unittest.TestCase):
 
     def test_interrupted_move_reconciles(self):
         (self.folder / "a.txt").write_text("original")
-        real_update = self.history.update
-        with patch.object(self.history, "update", side_effect=RuntimeError("crash")):
-            with self.assertRaises(RuntimeError):
+        original_unlink = Path.unlink
+
+        def terminate_after_unlink(path, *args, **kwargs):
+            original_unlink(path, *args, **kwargs)
+            raise SystemExit("process interrupted")
+
+        with patch.object(Path, "unlink", terminate_after_unlink):
+            with self.assertRaises(SystemExit):
                 self.history.apply(scan(self.folder))
-        self.history.update = real_update
+        self.history.close()
+        self.history = History(self.root / "history.sqlite")
         self.history.reconcile()
         self.assertEqual(self.history.rows()[0]["state"], "moved")
         self.history.undo_latest()
