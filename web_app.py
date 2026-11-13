@@ -19,6 +19,7 @@ class OrganizerServer(HTTPServer):
         self.history.reconcile()
         self.token = secrets.token_urlsafe(32)
         self.plan = None
+        self.plan_id = ""
         self.folder = ""
         self.message = "Start with a sample folder, then preview before moving anything."
 
@@ -79,23 +80,29 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if action == "preview":
                 app.plan = None
+                app.plan_id = ""
                 app.folder = fields.get("folder", [""])[0].strip()
                 if not app.folder:
                     raise ValueError("Enter a folder path first.")
                 app.plan = scan(app.folder)
+                app.plan_id = secrets.token_urlsafe(24)
                 app.message = f"Preview ready: {len(app.plan)} eligible files. No files moved."
             elif action == "apply":
                 if app.plan is None:
                     raise ValueError("Preview files before applying.")
+                if fields.get("plan_id", [""])[0] != app.plan_id:
+                    raise ValueError("Preview changed in another tab; preview again before applying.")
                 batch = app.history.apply(app.plan)
                 app.history.reconcile()
                 rows = [r for r in app.history.rows() if r["batch"] == batch]
                 count = sum(r["state"] == "moved" for r in rows)
                 app.plan = None
+                app.plan_id = ""
                 app.message = f"Moved {count} of {len(rows)} files. Check history for skipped files."
             elif action == "undo":
                 app.history.undo_latest()
                 app.plan = None
+                app.plan_id = ""
                 app.message = "Undo attempted. Check each file's status and details in history."
             else:
                 raise ValueError("Unknown action.")
@@ -121,7 +128,8 @@ def render(app):
         preview = (f"<table><thead><tr><th>File</th><th>Move to</th><th>Status</th></tr></thead>"
                    f"<tbody>{rows}</tbody></table>" if rows else "<p>No eligible files found.</p>")
         if rows:
-            preview += form("apply", '<label class="confirm"><input type="checkbox" required> '
+            preview += form("apply", f'<input type="hidden" name="plan_id" value="{app.plan_id}">'
+                            '<label class="confirm"><input type="checkbox" required> '
                             'I reviewed this preview and approve these moves.</label>'
                             '<button>Apply these moves</button>')
     history = app.history.rows()
