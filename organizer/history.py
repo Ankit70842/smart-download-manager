@@ -105,12 +105,20 @@ class History:
             source, destination = Path(row["source"]), Path(row["destination"])
             try:
                 if source.exists() and not destination.exists():
-                    state = "undone" if row["state"] == "undoing" else "failed"
+                    if row["state"] == "undoing":
+                        valid = (source.is_file() and not source.is_symlink()
+                                 and source.parent.resolve() == source.parent
+                                 and fingerprint(source) == row["digest"])
+                        state = "undone" if valid else "review"
+                    else:
+                        state = "failed"
                 elif not source.exists() and destination.is_file() and not destination.is_symlink():
-                    state = "moved" if fingerprint(destination) == row["digest"] else "review"
+                    valid = (destination.parent.resolve() == destination.parent
+                             and fingerprint(destination) == row["digest"])
+                    state = "moved" if valid else "review"
                 else:
                     state = "review"
-                self.update(row["id"], state, "Interrupted or failed operation reconciled.")
+                self.update(row["id"], state, row["error"] or "Interrupted operation reconciled.")
             except OSError as error:
                 self.update(row["id"], "review", str(error))
 
@@ -125,6 +133,7 @@ class History:
             if move["batch"] != row["batch"] or move["state"] != "moved":
                 continue
             source, destination = Path(move["source"]), Path(move["destination"])
+            started = False
             try:
                 if source.exists() or source.is_symlink():
                     raise ValueError("Original path is occupied; undo skipped.")
@@ -133,7 +142,10 @@ class History:
                 if fingerprint(destination) != move["digest"]:
                     raise ValueError("File contents changed; undo skipped.")
                 self.update(move["id"], "undoing")
+                started = True
                 transfer(destination, source)
                 self.update(move["id"], "undone")
             except (OSError, ValueError) as error:
-                self.update(move["id"], "moved", str(error))
+                self.update(move["id"], "undoing" if started else "moved", str(error))
+                if started:
+                    self._reconcile()

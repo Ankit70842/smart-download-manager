@@ -115,3 +115,35 @@ class HistoryTests(unittest.TestCase):
         self.assertTrue((self.folder / "a.txt").exists())
         self.assertTrue((self.folder / "Documents" / "a.txt").exists())
         self.assertEqual(self.history.rows()[0]["state"], "review")
+
+    def test_undo_unlink_failure_is_reconciled_as_manual_review(self):
+        source = self.folder / "a.txt"
+        source.write_text("original")
+        self.history.apply(scan(self.folder))
+        with patch.object(Path, "unlink", side_effect=PermissionError("file locked")):
+            self.history.undo_latest()
+        self.history.reconcile()
+        self.assertEqual(source.read_text(), "original")
+        self.assertEqual((self.folder / "Documents" / "a.txt").read_text(), "original")
+        self.assertEqual(self.history.rows()[0]["state"], "review")
+
+    def test_recovery_does_not_trust_changed_restored_contents(self):
+        source = self.folder / "a.txt"
+        source.write_text("original")
+        self.history.apply(scan(self.folder))
+        # Emulate process termination at the filesystem boundary after unlink.
+        original_unlink = Path.unlink
+
+        def terminate_after_unlink(path, *args, **kwargs):
+            original_unlink(path, *args, **kwargs)
+            raise SystemExit("process interrupted")
+
+        with patch.object(Path, "unlink", terminate_after_unlink):
+            with self.assertRaises(SystemExit):
+                self.history.undo_latest()
+        source.write_text("externally changed after interruption")
+        self.history.close()
+        self.history = History(self.root / "history.sqlite")
+        self.history.reconcile()
+        self.assertEqual(source.read_text(), "externally changed after interruption")
+        self.assertEqual(self.history.rows()[0]["state"], "review")
