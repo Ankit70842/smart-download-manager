@@ -40,7 +40,7 @@ class HistoryTests(unittest.TestCase):
         self.history.reconcile()
         self.assertEqual(destination.read_text(), "existing")
         self.assertEqual((self.folder / "a.txt").read_text(), "new")
-        self.assertEqual(self.history.rows()[0]["state"], "review")
+        self.assertEqual(self.history.rows()[0]["state"], "failed")
 
     def test_undo_refuses_changed_file_and_occupied_path(self):
         (self.folder / "a.txt").write_text("original")

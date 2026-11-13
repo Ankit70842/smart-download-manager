@@ -14,7 +14,7 @@ st.write("Preview your files, sort them into folders, and undo when needed.")
 st.caption("Local only · No uploads · No automatic deletion")
 
 folder = st.text_input("Folder path", placeholder=r"C:\Users\YourName\Downloads")
-st.caption("Scans top-level files only. Hidden files, subfolders, and symbolic links are skipped.")
+st.caption("Scans top-level files only. Dot-prefixed files, subfolders, and symbolic links are skipped.")
 
 history = History(Path(__file__).parent / ".organizer" / "history.sqlite")
 try:

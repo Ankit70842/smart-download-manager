@@ -73,6 +73,14 @@ class History:
                 self.db.commit()
                 transfer(source, destination)
                 self.update(row_id, "moved")
+            except FileExistsError as error:
+                if row_id is not None:
+                    self.update(row_id, "failed", "Destination already exists; file skipped.")
+                else:
+                    self.db.execute(
+                        "INSERT INTO moves(batch,source,destination,digest,state,error) VALUES(?,?,?,?,?,?)",
+                        (batch, str(source), str(destination), "", "failed", str(error)))
+                    self.db.commit()
             except (OSError, ValueError) as error:
                 if row_id is None:
                     cursor = self.db.execute(
