@@ -14,8 +14,11 @@ def main():
     parser.add_argument("--apply", action="store_true", help="Apply moves after confirmation")
     parser.add_argument("--undo", action="store_true", help="Undo latest available batch")
     parser.add_argument("--history", action="store_true", help="Show operation history")
+    parser.add_argument("--database", type=Path,
+                        default=Path(__file__).resolve().parent.parent / ".organizer" / "history.sqlite",
+                        help="History database path (use a separate path for demos/tests)")
     args = parser.parse_args()
-    history = History(Path(__file__).resolve().parent.parent / ".organizer" / "history.sqlite")
+    history = History(args.database)
     try:
         history.reconcile()
         if args.undo:
