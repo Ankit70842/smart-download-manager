@@ -2,6 +2,8 @@
 // Prerequisite: open the local app with at least one history row.
 async page => {
   await page.setViewportSize({width:390,height:844});
+  const history = page.locator('#history');
+  if (!(await history.evaluate(el => el.open))) await history.locator(':scope > summary').click();
   const operation = page.locator('#history .operation').first();
   if (!(await operation.evaluate(el => el.open))) await operation.locator(':scope > summary').click();
   const lines = await operation.getByRole('columnheader',{name:'Status',exact:true}).evaluate(el => {

@@ -17,6 +17,8 @@ def create_demo(parent=None):
     for name, text in files.items():
         (source / name).write_text(text, encoding="utf-8")
     (source / "nested").mkdir()
+    (source / "Code").mkdir()
+    (source / "Documents").mkdir()
     manifest = dict(root=str(root), source=str(source), destination=str(destination), files=files)
     (root / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return manifest

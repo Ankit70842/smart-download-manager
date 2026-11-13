@@ -51,7 +51,7 @@ class WebTests(unittest.TestCase):
                 request("POST", {"token": token, "action": "preview", "folder": str(folder)})
                 html = request("GET")[1]
                 self.assertIn("notes.txt", html)
-                self.assertIn("Apply these moves", html)
+                self.assertIn("Review suggested folders", html)
                 plan_id = re.search(r'name="plan_id" value="([^"]+)"', html).group(1)
                 self.assertTrue(source.exists())
                 request("POST", {"token": token, "action": "destination", "mode": "inside", "plan_id": plan_id})

@@ -13,6 +13,7 @@ def value(fields, name, default=""):
 
 def refresh(app):
     app.plan_id = secrets.token_urlsafe(24)
+    app.confirm_id = ""
 
 
 def require_plan(app, fields):
@@ -35,7 +36,7 @@ def edited(app, fields):
 
 def handle(app, fields):
     action = value(fields, "action")
-    if action == "preview":
+    if action in ("preview", "scan"):
         app.plan = None
         refresh(app)
         app.folder = value(fields, "folder").strip()
@@ -50,6 +51,42 @@ def handle(app, fields):
         app.message = f"Preview ready: {eligible} eligible files. No files moved. Choose where files go next."
         if app.plan.truncated:
             app.message += f" Showing the first {len(app.plan.entries)} of {app.plan.total_entries} top-level items; remaining items are not selected or processed."
+        if action == "scan":
+            app.plan.choose_destination(app.plan.source)
+            for entry in app.plan.entries:
+                if entry.status.startswith("Conflict"):
+                    entry.selected = False
+            app.message = "Suggestions ready. Review the folders below, then choose Organize. Nothing has moved."
+            if app.plan.truncated:
+                app.message += f" Showing {len(app.plan.entries)} of {app.plan.total_entries} files; remaining files are not processed."
+    elif action == "organize_review":
+        require_plan(app, fields)
+        candidate = edited(app, fields)
+        mode = value(fields, "mode")
+        if mode not in ("inside", "external"):
+            raise ValueError("Choose inside the source folder or another folder.")
+        candidate.choose_destination(candidate.source if mode == "inside" else value(fields, "destination"))
+        for entry in candidate.entries:
+            if entry.status.startswith("Conflict"):
+                entry.selected = False
+        if not candidate.moves():
+            raise ValueError("No safe files selected. Expand Edit Details to choose files or categories.")
+        app.plan = candidate
+        refresh(app)
+        app.confirm_id = secrets.token_urlsafe(24)
+        app.message = "One last check: confirm the selected files and destination before moving anything."
+    elif action == "organize_cancel":
+        require_plan(app, fields)
+        refresh(app)
+        app.message = "Back to your suggestions. No files moved."
+    elif action == "organize_confirm":
+        if not app.confirm_id or value(fields, "confirm_id") != app.confirm_id:
+            raise ValueError("Review the organization again before confirming; this confirmation is stale.")
+        if value(fields, "confirmed") != "yes":
+            raise ValueError("Confirm organization before moving files.")
+        # Reuse the existing apply checks/journal; no file edits are accepted from
+        # a confirmation form that differs from the reviewed server-side plan.
+        handle(app, {"action": ["apply"], "plan_id": [app.plan_id], "confirmed": ["yes"]})
     elif action == "destination":
         require_plan(app, fields)
         mode = value(fields, "mode")
@@ -61,6 +98,8 @@ def handle(app, fields):
     elif action in ("edit", "bulk", "apply"):
         require_plan(app, fields)
         candidate = edited(app, fields)
+        if action in ("edit", "bulk") and value(fields, "mode") in ("inside", "external"):
+            candidate.choose_destination(candidate.source if value(fields, "mode") == "inside" else value(fields, "destination"))
         if action == "bulk":
             category = value(fields, "bulk_category")
             for index, entry in enumerate(candidate.entries):
@@ -82,7 +121,7 @@ def handle(app, fields):
             app.history.reconcile()
             rows = [row for row in app.history.rows() if row["batch"] == batch]
             moved = sum(row["state"] == "moved" for row in rows)
-            app.message = f"Moved {moved} of {len(rows)} files. Operation {batch[:8]}. Check history for skipped files."
+            app.message = f"Moved {moved} of {len(rows)} files. Undo Last is available if you change your mind. Check History for any skipped files."
         else:
             app.plan = candidate
             refresh(app)

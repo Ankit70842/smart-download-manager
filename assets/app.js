@@ -5,8 +5,6 @@
     const rows = [...table.querySelectorAll('tbody tr')];
     const search = document.querySelector('#search');
     const filter = document.querySelector('#category-filter');
-    const selectedCount = document.querySelector('[data-selected-count]');
-    const count = () => { selectedCount.textContent = rows.filter(row => row.querySelector('input[type=checkbox]:checked')).length; };
     const update = () => {
       const query = search.value.trim().toLocaleLowerCase();
       for (const row of rows) {
@@ -17,7 +15,6 @@
         const text = [row.dataset.name, category, row.cells[4].textContent].join(' ').toLocaleLowerCase();
         row.hidden = !(text.includes(query) && (!filter.value || filter.value === category));
       }
-      count();
     };
     search.addEventListener('input', update);
     filter.addEventListener('change', update);
@@ -33,18 +30,12 @@
           const checkbox = row.querySelector('input[type=checkbox]');
           if (!checkbox.disabled) checkbox.checked = checked;
         });
-        count();
       });
     }
   }
   let submitting = false;
   document.addEventListener('submit', event => {
     if (submitting) { event.preventDefault(); return; }
-    if (event.submitter?.value === 'apply' && !event.target.querySelector('[name=confirmed]').checked) {
-      event.preventDefault();
-      alert('Review the exact paths and check the Apply confirmation first.');
-      return;
-    }
     submitting = true;
     document.body.classList.add('is-busy');
   });

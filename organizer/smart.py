@@ -39,6 +39,7 @@ class Preview:
     destination_root: Path | None = None
     total_entries: int = 0
     truncated: bool = False
+    ignored_directories: int = 0
 
     def choose_destination(self, root):
         root = folder_root(root)
@@ -85,7 +86,13 @@ class Preview:
 def preview(folder, settings, limit=1000):
     root = folder_root(folder)
     plan = Preview(root)
-    paths = sorted(root.iterdir(), key=lambda p: p.name.casefold())
+    paths = []
+    for source in root.iterdir():
+        if source.is_dir():
+            plan.ignored_directories += 1
+        else:
+            paths.append(source)
+    paths.sort(key=lambda p: p.name.casefold())
     plan.total_entries = len(paths)
     plan.truncated = len(paths) > limit
     for source in paths[:limit]:
@@ -104,7 +111,7 @@ def preview(folder, settings, limit=1000):
                 ensure_movable(source)
                 result = classify(source.name, settings)
                 entry.category, entry.confidence, entry.reason = result.category, result.confidence, result.reason
-                entry.selected = result.confidence != "Needs review"
+                entry.selected = result.confidence == "High"
         except OSError as error:
             entry.skip_reason = f"File unavailable or locked: {error}"
         plan.entries.append(entry)

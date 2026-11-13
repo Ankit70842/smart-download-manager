@@ -4,6 +4,28 @@ import unittest
 
 
 class SmartTests(unittest.TestCase):
+    def test_existing_category_directories_are_not_file_suggestions(self):
+        from organizer.smart import preview
+        from organizer.rules import default_settings
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            (root / "Code").mkdir()
+            (root / "Documents").mkdir()
+            (root / "CN.pdf").write_text("notes")
+            plan = preview(root, default_settings())
+            self.assertEqual([entry.source.name for entry in plan.entries], ["CN.pdf"])
+            self.assertEqual(plan.ignored_directories, 2)
+
+    def test_only_high_confidence_suggestions_start_selected(self):
+        from organizer.smart import preview
+        from organizer.rules import default_settings
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            for name in ["CN.pdf", "setup.exe", "holiday.png", "unknown.pdf"]:
+                (root / name).write_text("placeholder")
+            plan = preview(root, default_settings())
+            self.assertEqual([entry.source.name for entry in plan.entries if entry.selected], ["CN.pdf"])
+
     def test_large_scan_reports_its_preview_limit_instead_of_silently_dropping_files(self):
         from organizer.smart import preview
         from organizer.rules import default_settings

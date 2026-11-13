@@ -33,10 +33,12 @@ class OrganizerServer(HTTPServer):
         self.token = secrets.token_urlsafe(32)
         self.plan = None
         self.plan_id = ""
+        self.confirm_id = ""
         self.undo_rows = []
         self.undo_id = ""
-        self.folder = ""
-        self.message = "Start with a disposable folder. Scan first, choose a destination, then review before Apply."
+        # Prefill only: do not stat, resolve, scan, or create this folder at startup.
+        self.folder = str(Path.home() / "Downloads")
+        self.message = "Ready when you are. Nothing moves until you confirm."
         try:
             self.process_account = subprocess.run(
                 ["whoami"], check=True, capture_output=True, text=True, timeout=2

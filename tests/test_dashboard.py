@@ -2,6 +2,54 @@ import tests.http_support as support
 
 
 class DashboardTests(support.ServerCase):
+    def test_get_prefills_downloads_without_scanning_it(self):
+        from pathlib import Path
+        from html import escape
+        html = self.request()[1]
+        self.assertIn(f'value="{escape(str(Path.home() / "Downloads"), quote=True)}"', html)
+        self.assertNotIn('id="folder-summary"', html)
+        self.assertIn('id="change-folder"', html)
+
+    def test_simple_scan_groups_files_and_organizes_only_after_one_final_confirmation(self):
+        folder = self.root / "simple"
+        folder.mkdir()
+        (folder / "Code").mkdir()
+        (folder / "Documents").mkdir()
+        source = folder / "CN.pdf"
+        source.write_text("notes")
+        self.request({"token": self.token, "action": "scan", "folder": str(folder)})
+        html = self.request()[1]
+        self.assertIn("Review suggested folders", html)
+        self.assertIn('id="folder-summary"', html)
+        self.assertTrue(source.exists())
+        self.request({"token": self.token, "action": "organize_review", "mode": "inside", "plan_id": self.field(html, "plan_id")})
+        html = self.request()[1]
+        self.assertIn("Confirm &amp; Organize", html)
+        self.assertTrue(source.exists())
+        self.request({"token": self.token, "action": "organize_confirm", "confirmed": "yes", "confirm_id": self.field(html, "confirm_id")})
+        self.assertEqual((folder / "Studies" / "Computer Networks" / "CN.pdf").read_text(), "notes")
+        self.assertFalse(source.exists())
+
+    def test_advanced_edits_keep_the_explicit_external_destination(self):
+        folder, html = self.preview("destination-edit")
+        target = self.root / "external"
+        target.mkdir()
+        self.request({"token": self.token, "action": "edit", "plan_id": self.field(html, "plan_id"),
+                      "mode": "external", "destination": str(target), "edits_present": "yes",
+                      "selected_0": "yes", "category_0": "Personal"})
+        self.assertIn(f'value="{target}"', self.request()[1])
+        self.assertTrue((folder / "notes.txt").exists())
+
+    def test_canceling_invalidates_the_final_confirmation_without_moving_files(self):
+        folder, html = self.preview("cancel-confirm")
+        self.request({"token": self.token, "action": "organize_review", "mode": "inside", "plan_id": self.field(html, "plan_id")})
+        html = self.request()[1]
+        old_confirmation = self.field(html, "confirm_id")
+        self.request({"token": self.token, "action": "organize_cancel", "plan_id": self.field(html, "plan_id")})
+        self.request({"token": self.token, "action": "organize_confirm", "confirm_id": old_confirmation, "confirmed": "yes"})
+        self.assertTrue((folder / "notes.txt").exists())
+        self.assertIn("confirmation is stale", self.request()[1])
+
     def test_empty_undo_explains_that_no_operation_is_available(self):
         self.request({"token": self.token, "action": "undo_preview"})
         self.assertIn("No matching organization", self.request()[1])
