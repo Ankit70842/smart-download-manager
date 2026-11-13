@@ -13,6 +13,11 @@ from organizer.history import History
 
 
 class OrganizerServer(HTTPServer):
+    def get_request(self):
+        connection, address = super().get_request()
+        connection.settimeout(2)
+        return connection, address
+
     def __init__(self, address, database):
         super().__init__(address, Handler)
         self.history = History(database)
@@ -127,8 +132,8 @@ def render(app):
             f"<tr><td>{escape(m.source.name)}</td><td>{escape(m.destination.parent.name)}</td>"
             f"<td>{'Conflict: skipped' if m.destination.exists() else 'Ready'}</td></tr>"
             for m in app.plan)
-        preview = (f"<table><thead><tr><th>File</th><th>Move to</th><th>Status</th></tr></thead>"
-                   f"<tbody>{rows}</tbody></table>" if rows else "<p>No eligible files found.</p>")
+        preview = (f"<div class='scroll'><table><thead><tr><th>File</th><th>Move to</th><th>Status</th></tr></thead>"
+                   f"<tbody>{rows}</tbody></table></div>" if rows else "<p>No eligible files found.</p>")
         if rows:
             preview += form("apply", f'<input type="hidden" name="plan_id" value="{app.plan_id}">'
                             '<label class="confirm"><input type="checkbox" name="confirmed" value="yes" required> '
@@ -162,7 +167,7 @@ button:hover{{background:#396549}}button:focus-visible,input:focus-visible{{outl
 .secondary{{background:#edf0e8;color:#294d38;margin-top:12px}}.confirm{{font-size:14px;font-weight:400;margin:18px 0}}
 table{{border-collapse:collapse;width:100%;font-size:14px;text-align:left}}th,td{{padding:12px 8px;border-bottom:1px solid #e5e9e1;overflow-wrap:anywhere}}
 th{{color:#637166;font-size:12px}}.scroll{{overflow:auto;max-height:400px}}.status{{font-weight:600}}footer{{font-size:13px;color:#637166;margin:25px 0}}
-@media(max-width:720px){{.grid{{grid-template-columns:1fr}}main{{margin-top:28px}}section{{padding:18px}}}}
+@media(max-width:720px){{.grid{{grid-template-columns:1fr}}main{{margin-top:28px}}section{{padding:18px}}.scroll table{{min-width:540px}}}}
 </style></head><body><main><div class="eyebrow">A LITTLE ORDER, LOCALLY</div>
 <h1>Make room for clarity.</h1><p class="intro">Turn a cluttered download folder into a place where everything is easy to find. Preview first. Organize when you're ready.</p>
 <div class="notice" role="status">{escape(app.message)}</div>

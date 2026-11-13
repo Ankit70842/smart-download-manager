@@ -4,6 +4,7 @@ import http.client
 from pathlib import Path
 import re
 import subprocess
+import socket
 import sys
 from tempfile import TemporaryDirectory
 import unittest
@@ -72,3 +73,14 @@ class WebReviewTests(unittest.TestCase):
                       "plan_id": self.field(html, "plan_id")})
         self.assertTrue((folder / "notes.txt").exists())
         self.assertIn("Confirm the preview", self.request()[1])
+
+    def test_incomplete_request_cannot_block_the_local_server_indefinitely(self):
+        stalled = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+        try:
+            # Send an incomplete body. A normal request must still be served after
+            # the bounded socket deadline, without changing files or restarting.
+            stalled.sendall((f"POST / HTTP/1.0\r\nHost: 127.0.0.1:{self.port}\r\n"
+                             "Content-Length: 100\r\n\r\ntoken=").encode())
+            self.assertEqual(self.request()[0], 200)
+        finally:
+            stalled.close()
