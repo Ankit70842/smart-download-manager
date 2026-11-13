@@ -74,6 +74,16 @@ class WebReviewTests(unittest.TestCase):
         self.assertTrue((folder / "notes.txt").exists())
         self.assertIn("Confirm the preview", self.request()[1])
 
+    def test_server_diagnostics_identify_actual_process_account_and_interpreter(self):
+        _, html = self.request()
+        self.assertIn("Server diagnostics", html)
+        self.assertIn("Process account", html)
+        self.assertIn(str(Path(sys.executable)), html)
+        # Environment usernames may be inherited from a different user. Compare
+        # the OS token identity instead of getpass/USERNAME.
+        identity = subprocess.check_output(["whoami"], text=True).strip()
+        self.assertIn(identity, html)
+
     def test_incomplete_request_cannot_block_the_local_server_indefinitely(self):
         stalled = socket.create_connection(("127.0.0.1", self.port), timeout=5)
         try:

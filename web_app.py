@@ -6,6 +6,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 import secrets
 import sqlite3
+import subprocess
+import sys
 from urllib.parse import parse_qs
 
 from organizer.core import scan
@@ -27,6 +29,15 @@ class OrganizerServer(HTTPServer):
         self.plan_id = ""
         self.folder = ""
         self.message = "Start with a sample folder, then preview before moving anything."
+        try:
+            # USERNAME/getpass can describe the parent environment rather than
+            # this process's Windows access token (as with sandbox launches).
+            self.process_account = subprocess.run(
+                ["whoami"], check=True, capture_output=True, text=True, timeout=2
+            ).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            self.process_account = "Unavailable (could not query OS identity)"
+        self.python_executable = sys.executable
 
     def server_close(self):
         if hasattr(self, "history"):
@@ -152,6 +163,11 @@ def render(app):
                        f'<input id="folder" name="folder" value="{escape(app.folder, quote=True)}" '
                        'placeholder="Paste a local folder path" required>'
                        '<button>Preview files →</button>')
+    account_warning = (
+        '<p>This server runs under a restricted automation account. Start '
+        '<code>python web_app.py</code> from your own terminal to use your account’s folder permissions.</p>'
+        if "codexsandbox" in app.process_account.casefold() else ""
+    )
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Folder Organizer</title>
 <style>
@@ -178,6 +194,10 @@ th{{color:#637166;font-size:12px}}.scroll{{overflow:auto;max-height:400px}}.stat
 <section><h2>Operation history</h2>{history_html}{undo}
 <p class="muted">Undo checks file contents and skips occupied original paths. Empty category folders remain. A “review” status means inspect both paths manually.</p></section>
 <footer>Runs on your computer · No uploads · No automatic deletion · Keep files closed while organizing</footer>
+<details><summary>Server diagnostics</summary>
+<p>Process account: <code>{escape(app.process_account)}</code><br>
+Python executable: <code>{escape(app.python_executable)}</code></p>
+{account_warning}</details>
 </main></body></html>"""
 
 
@@ -187,6 +207,7 @@ def main():
     args = parser.parse_args()
     with OrganizerServer(("127.0.0.1", args.port), Path(__file__).parent / ".organizer/history.sqlite") as server:
         print(f"Open http://127.0.0.1:{server.server_port} — press Ctrl+C to stop.", flush=True)
+        print(f"Process account: {server.process_account}\nPython executable: {server.python_executable}", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:

@@ -56,6 +56,7 @@ class History:
         for move in moves:
             source, destination = move.source, move.destination
             row_id = None
+            operation = "Validate source and destination"
             try:
                 if source.is_symlink() or not source.is_file():
                     raise ValueError("Source is missing or is not a regular file.")
@@ -66,13 +67,16 @@ class History:
                 parent = destination.parent
                 if parent.is_symlink() or (hasattr(parent, "is_junction") and parent.is_junction()):
                     raise ValueError("Category links and junctions are not supported.")
+                operation = f"Create category folder {parent}"
                 parent.mkdir(exist_ok=True)
+                operation = "Read source fingerprint"
                 digest = fingerprint(source)
                 cursor = self.db.execute(
                     "INSERT INTO moves(batch,source,destination,digest,state) VALUES(?,?,?,?,?)",
                     (batch, str(source), str(destination), digest, "pending"))
                 row_id = cursor.lastrowid
                 self.db.commit()
+                operation = "Move file (create destination hard link, then remove source name)"
                 transfer(source, destination)
                 self.update(row_id, "moved")
             except FileExistsError as error:
@@ -84,14 +88,15 @@ class History:
                         (batch, str(source), str(destination), "", "failed", str(error)))
                     self.db.commit()
             except (OSError, ValueError) as error:
+                details = f"{operation}: {error}"
                 if row_id is None:
                     cursor = self.db.execute(
                         "INSERT INTO moves(batch,source,destination,digest,state,error) VALUES(?,?,?,?,?,?)",
-                        (batch, str(source), str(destination), "", "failed", str(error)))
+                        (batch, str(source), str(destination), "", "failed", details))
                     self.db.commit()
                 else:
                     # Both paths may exist if unlink failed; preserve both for review.
-                    self.update(row_id, "pending", str(error))
+                    self.update(row_id, "pending", details)
         return batch
 
     @exclusive

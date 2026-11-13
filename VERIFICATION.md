@@ -2,7 +2,7 @@
 
 ## Executed checks
 
-- `python -m unittest discover -s tests -v`: 20 tests, 19 passed, 1 skipped.
+- `python -m unittest discover -s tests -v`: 22 tests, 21 passed, 1 skipped.
   The skipped test needs Windows symbolic-link creation permission.
 - The same suite passed under standard CPython 3.12.4 and PATH-selected
   MSYS2 Python 3.12.7.
@@ -14,6 +14,13 @@
   interrupted apply/undo recovery. Crash injection occurs at the filesystem seam;
   it is not a physical power-loss or storage durability test.
 - CLI tests cover preview, cancellation, apply, and undo with isolated databases.
+- Permission regressions cover denied category creation without data loss and
+  HTTP diagnostics that identify the actual process account/interpreter.
+- Live permission reproduction: the sandbox-owned server previewed three new
+  files in a unique subfolder of `OrganizerTest`, then failed category creation
+  with WinError 5. The same interpreter was restarted under Ankit; Preview,
+  Apply (3/3), and Undo passed and original contents were verified. The folder's
+  ACL was not changed and no existing test files or Downloads were organized.
 - Playwright CLI 0.1.24 + Chrome: preview four files; confirmation blocks unchecked
   submission; remove one source before apply; move two files; skip one collision
   and one missing source; undo both moves. Filesystem contents verified afterward.

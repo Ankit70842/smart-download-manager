@@ -1,5 +1,40 @@
 # Final quality review — 13 November 2026
 
+## Follow-up: Apply permission failure
+
+**Medium — configuration/error diagnosis, confirmed and fixed.** The server had
+been launched as `CodexSandboxOffline`, using MSYS2 Python, while the successful
+manual checks ran as Ankit. `OrganizerTest` granted the sandbox group read/execute
+access and Ankit full control. Journal errors pointed to `parent.mkdir(exist_ok=True)`
+for category directories, before hard-link creation or source removal. Destination
+paths were the expected children (`Documents` and `Code`) of the selected folder.
+
+The earlier automation launch, not a different Python implementation, caused this
+permissions mismatch. The normal-account restart intentionally kept the same
+interpreter to isolate the variable. No ACL changes, admin requirement, hard-link
+fallback, or overwrite-policy relaxation was introduced.
+
+New public-boundary regressions first failed, then passed: denied category creation
+now includes the operation and destination while preserving the source; HTTP
+diagnostics report the OS identity and interpreter. Identity uses `whoami` rather
+than inherited environment usernames: `getpass.getuser()` incorrectly returned
+Ankit for the sandbox process during diagnosis. A restricted-account warning and
+normal-terminal instructions make the operational issue visible.
+
+Live HTTP reproduction used only newly generated files in a unique child of
+`OrganizerTest`: sandbox Apply moved 0/3 and preserved every source; after restart
+under Ankit, Preview → Apply (3/3) → Undo restored all bytes. Existing test files
+and Downloads were not modified. The full suite now has 22 tests: 21 passed and
+one real-symlink permission skip. Existing history was retained. No remote action.
+
+The remaining categories were checked against the small change: parameterized
+journaling, operation lock, no-overwrite transfer, recovery states, and connection
+cleanup remain intact; diagnostics run once with a bounded subprocess timeout and
+no shell. Existing performance, optional-dependency, and symlink-test limits below
+are unchanged.
+
+---
+
 Scope: full bug and security category review of the local application and tracked
 history on branch `master`. Agreed test boundaries: public organizer API with real
 temporary files, and HTTP/browser interactions. Confirmed fixes used failing

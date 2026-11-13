@@ -74,6 +74,21 @@ class HistoryTests(unittest.TestCase):
         self.history.apply(plan)
         self.assertEqual({r["state"] for r in self.history.rows()}, {"failed", "moved"})
 
+    def test_denied_category_creation_identifies_operation_and_preserves_source(self):
+        source = self.folder / "a.txt"
+        source.write_text("original")
+        plan = scan(self.folder)
+        denied = PermissionError(13, "Access is denied", str(self.folder / "Documents"))
+        with patch.object(Path, "mkdir", side_effect=denied):
+            self.history.apply(plan)
+        self.history.reconcile()
+        row = self.history.rows()[0]
+        self.assertEqual(row["state"], "failed")
+        self.assertEqual(source.read_text(), "original")
+        self.assertFalse((self.folder / "Documents" / "a.txt").exists())
+        self.assertIn("Create category folder", row["error"])
+        self.assertIn(str(self.folder / "Documents"), row["error"])
+
     def test_interrupted_move_reconciles(self):
         (self.folder / "a.txt").write_text("original")
         original_unlink = Path.unlink

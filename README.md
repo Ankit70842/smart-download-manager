@@ -44,6 +44,26 @@ Do not expose it to a network. Files are never uploaded anywhere.
 The supported browser UI is handwritten HTML/CSS served by Python's built-in
 `HTTPServer` and `BaseHTTPRequestHandler`. No framework installation is required.
 
+## Troubleshooting access denied
+
+If Preview succeeds but Apply reports `[WinError 5]`, check the operation named in
+history and expand **Server diagnostics**. Reading a folder does not imply that
+the server can create category folders, create hard links, or remove source names.
+
+The diagnostics show the actual OS process account and Python executable. A
+server launched inside an automation sandbox may have less access than your own
+PowerShell session, even if both use the same Python. In one verified case,
+`CodexSandboxOffline` could read `OrganizerTest` but could not create its category
+folders; restarting the same interpreter under the normal user fixed Apply/Undo.
+Environment values such as `USERNAME` and `getpass.getuser()` can be misleading
+when a process inherits another account's environment.
+
+Stop that server and run `whoami`, then `python web_app.py`, in your own normal
+terminal. Check the printed account and interpreter. You do not need to run as
+administrator or grant the sandbox broader access. If it already runs as your
+account, check the specific destination folder's permissions, locked files, and
+filesystem support instead. Test with disposable files before organizing data.
+
 ## Optional Streamlit interface
 
 **Experimental and unsupported for the initial release.** `app.py` is a separate
