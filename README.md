@@ -31,19 +31,28 @@ a public website. No folder is scanned or organized automatically at startup.
 
 ## Everyday workflow
 
-1. Paste an existing, absolute **source folder** path and click **Scan & Preview**.
-2. Explicitly choose **inside the source** or **a separate existing local folder**,
-   then click **Set destination**. Paths are not silently redirected elsewhere.
-3. Inspect filename/extension, category, exact paths, reason, confidence label, and
-   status. Change a category per file or in bulk; select/deselect files to include.
-4. Search, filter, or sort the preview. **Filtering only hides rows**; use selection
-   controls to exclude them. Uncertain files start excluded.
-5. Check the Apply confirmation and click **Apply these moves**. Current selections
-   and edits are used; conflicts and failures appear in persistent history.
-6. Choose **Undo Last Organization**, **Undo operation**, or **Undo file**. Review
-   the proposed restore paths, then explicitly **Confirm restore**.
+1. **Scan Downloads.** Downloads is prefilled; expand **Change folder** to use a
+   different source. Prefilling does not scan or even check that folder. Reading
+   starts only when you click Scan.
+2. **Review suggested folders.** A compact category summary shows where files will
+   go. Safe, high-confidence suggestions start selected. Medium-confidence,
+   uncertain, incomplete, and conflicting suggestions are left out by default.
+3. **Organize.** Keep files inside the source or choose **Another folder**. Click
+   **Organize**, review the destination and counts, then **Confirm & Organize**.
+   This is the single final move confirmation; there is no extra checkbox.
 
-Pasting a path is the supported safe equivalent to a folder picker; the app does
+Need more control? Expand **Edit Details** for individual files, exact paths,
+search, filtering, sorting, selection, and bulk changes. **Filtering only hides
+rows**; it does not exclude files. Custom categories and rules live under
+**Advanced**. Changing a destination is retained when saving advanced edits.
+
+**Undo Last** is always prominent. It shows a restore preview before **Confirm
+restore**. Expand **History** for older operations and individual-file undo.
+Long operation IDs are kept in technical details, not the main screen.
+
+The default is the current user's `Downloads` directory under their home folder;
+if Windows has redirected it elsewhere, use **Change folder**. Pasting a path is
+the supported safe equivalent to a folder picker; the app does
 not require desktop-dialog integration. Each file's destination is the explicitly
 chosen root + editable category/subcategory + unchanged original filename.
 
@@ -64,7 +73,7 @@ chosen root + editable category/subcategory + unchanged original filename.
 
 ## Custom categories and rules
 
-Under **Categories & rules**, create nested paths such as `Studies/AI`, rename
+Under **Advanced → Categories & rules**, create nested paths such as `Studies/AI`, rename
 categories, or delete them from settings. Deleting a parent also removes its nested
 settings categories and associated rules. **Existing folders/files are never
 renamed or deleted by a settings action.** `Unsorted` remains available.
@@ -82,9 +91,10 @@ and filename before saving a potentially broad keyword.
 
 ## Safety, history, and undo
 
-- Source scanning is top-level only. Directories, links/junctions, dot-prefixed
-  files, incomplete/temporary downloads, unreadable files, and detected Windows
-  read/delete locks are skipped with explanations.
+- Source scanning is top-level only. Existing directories (including category
+  folders such as Code and Documents) are excluded entirely from file suggestions,
+  with a separate untouched-folder count. Links, dot-prefixed files, incomplete
+  downloads, unreadable files, and detected locks are skipped with explanations.
 - Source identity, size, and modification time are checked again before Apply.
 - Existing destination files are **never overwritten**. Symlink/junction category
   paths and destinations outside the selected root are rejected.

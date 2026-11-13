@@ -1,6 +1,25 @@
 # Verification — 13 November 2026
 
-## Smart Downloads Manager upgrade (latest)
+## Simplified interface (latest)
+
+- **49 tests: 48 passed, 1 Windows symlink-permission skip**, under both Python
+  installations. Added coverage for excluded directories, high-confidence-only
+  selection, default Downloads prefill without scan, simple final confirmation,
+  cancellation/stale confirmations, and retained external destinations.
+- Playwright + Chrome: initial screen has only Scan Downloads and Undo Last
+  buttons. Source editing, History, Advanced, and the file table start collapsed.
+  Verified grouped folders, Code/Documents directory exclusion, optional search,
+  filtering, bulk/per-file edits, external destination, and one final confirmation.
+- Filesystem check BEFORE final confirmation: all eight disposable source files
+  intact and no destination files created. AFTER confirmation and Undo Last:
+  three chosen files restored; all eight original file contents intact; existing
+  category directories and destination collision unchanged.
+- Desktop and 390px mobile screenshots inspected; mobile History regression
+  passed, zero browser console errors/warnings. Real Downloads was not accessed.
+- The previous detailed browser scenario is superseded by `browser_simple.js`
+  and `browser_simple_finish.js`; backend/API functionality remains covered.
+
+## Smart Downloads Manager upgrade (previous milestone)
 
 - Full automated suite: **43 tests, 42 passed, 1 skipped**. The skipped case needs
   Windows symbolic-link creation permission. The Windows delete-sharing lock

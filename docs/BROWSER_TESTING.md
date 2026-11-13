@@ -1,38 +1,42 @@
-# Reproduce browser verification
+# Verify the simplified interface
 
-Use only new disposable fixtures, not real Downloads. Python needs no third-party
-packages; Playwright CLI and Chrome are optional developer tooling.
+Use disposable fixtures only. No step below scans the real Downloads folder.
 
-1. Run `python scripts/create_smart_demo.py` from your own normal terminal. Note
-   its new `root`, `source`, and `destination`. It also saves `manifest.json`.
+1. Run `python scripts/create_smart_demo.py` in your normal terminal. It prints a
+   new `smart-review-*` root/source/destination and writes `manifest.json`. The
+   source includes Code, Documents, and nested directories to verify exclusion.
 2. Start `python web_app.py --port 8502 --database "ROOT\history.sqlite"`, replacing
-   `ROOT` with that new root. Use the same normal OS account for both commands.
-3. Create `.runtime` if necessary so review screenshots have a local output folder.
-4. With Playwright CLI installed:
+   ROOT with that new root. Keep the same normal OS account for both commands.
+3. Create `.runtime` for test screenshots, and use an installed Playwright CLI:
 
 ```powershell
-playwright-cli -s=smart-review open http://127.0.0.1:8502 --browser=chrome
-playwright-cli -s=smart-review fill '#folder' 'SOURCE_FROM_MANIFEST'
-playwright-cli -s=smart-review run-code --filename=tests/browser_smart.js
-playwright-cli -s=smart-review console error
-playwright-cli -s=smart-review run-code --filename=tests/browser_mobile.js
-playwright-cli -s=smart-review close
+playwright-cli -s=simple-review open http://127.0.0.1:8502 --browser=chrome
+playwright-cli -s=simple-review click '#change-folder > summary'
+playwright-cli -s=simple-review fill '#folder' 'SOURCE_FROM_MANIFEST'
+playwright-cli -s=simple-review run-code --filename=tests/browser_simple.js
 ```
 
-The script deliberately refuses a source without `smart-review-` in its path. It
-creates `Studies/AI` and a `robot` rule; scans; checks uncertainty/incomplete-file
-handling; chooses the sibling destination; searches/sorts/selects; bulk-edits two
-categories; excludes the placeholder EXE; includes an explicitly categorized
-uncertain file; Applies five successful moves plus one collision; restores one
-file and then the remaining four; checks narrow-screen overflow. Nothing is
-applied to any other folder. The placeholder EXE is never executed.
+The script refuses a source without `smart-review-` in its path. It verifies the
+collapsed interface, category groups, excluded directories, optional advanced
+controls, safe default selection, external destination, and final confirmation.
+**It stops before moving anything.**
 
-The developer must also verify actual filesystem results using the manifest:
-all eight source files retain their recorded contents, the original destination
-`Personal/invoice.txt` still contains `existing invoice`, and it is the only file
-remaining below the destination. The source `nested` directory stays untouched.
-Empty category directories may remain, by design.
+At this point verify all eight source files still match the manifest, the source
+directories still exist, and the only destination file is the pre-existing
+`Personal/invoice.txt`. Then explicitly run the confirmation/undo test:
 
-Screenshots are generated under ignored `.runtime`, not uploaded anywhere.
-The checked-in dashboard screenshot is an actual clean-start browser capture,
-with no private source paths or fabricated usage metrics.
+```powershell
+playwright-cli -s=simple-review run-code --filename=tests/browser_simple_finish.js
+playwright-cli -s=simple-review run-code --filename=tests/browser_mobile.js
+playwright-cli -s=simple-review console error
+playwright-cli -s=simple-review close
+```
+
+Three explicitly selected files are organized into Projects; the destination
+invoice collision is excluded. Undo Last previews and then restores all three.
+Verify the eight original contents again, Code/Documents/nested are untouched,
+and the destination invoice still contains `existing invoice` with no extra files.
+Empty category directories may remain. No placeholder EXE is executed.
+
+Screenshots under ignored `.runtime` are actual browser captures. Checked-in
+screenshots show the simplified initial UI without private paths or fake metrics.

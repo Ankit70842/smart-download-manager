@@ -1,6 +1,21 @@
 # Final quality review — 13 November 2026
 
-## Smart Downloads Manager review (latest)
+## Simplified UI review (latest)
+
+Main controls are reduced to Scan Downloads → grouped folder review → Organize.
+The default Downloads path is computed without reading it. A single final button
+confirms the server-held plan; changing/canceling it invalidates the confirmation.
+The existing journal, overwrite protection, file checks, and undo protections are
+retained. Power controls and technical IDs are collapsed rather than removed.
+
+Confirmed regressions were fixed test-first: existing category directories are
+no longer file suggestions; medium-confidence files are not auto-selected; saving
+advanced edits retains the chosen external destination. Real browser/filesystem
+checks proved no movement occurred before confirmation and complete restoration
+afterward. 49 tests passed except one permission-related symlink skip. Details are
+in VERIFICATION.md; older review records below are historical.
+
+## Smart Downloads Manager review (previous milestone)
 
 The supported UI is now the smart dashboard; older sections below are historical.
 The HTTP server and journal were extended in focused commits, not replaced by a

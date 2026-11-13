@@ -4,6 +4,15 @@ The original HTTP server and SQLite journal remain. Classification, editable
 preview state, settings, actions, and rendering are separated because adding all
 of them to the original server file would make it difficult to test and maintain.
 
+The simplified UI has three steps: Scan Downloads → Review suggested folders →
+Organize. The home Downloads path is only prefilled; no scan occurs automatically.
+Normal review is grouped by category, with high-confidence safe suggestions
+selected. Directories are excluded from file entries entirely. All power controls
+remain available under Edit Details or Advanced, and history starts collapsed.
+Organize prepares a server-side confirmation snapshot; the final button consumes
+its nonce and reuses the existing apply/journal safeguards. Canceling or editing
+invalidates that confirmation. No extra movement checkbox is required.
+
 ```mermaid
 flowchart LR
   Browser[Local browser + bundled CSS/JS] --> HTTP[web_app.py: Host, Origin, token, size checks]
