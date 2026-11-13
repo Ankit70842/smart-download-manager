@@ -15,7 +15,8 @@ from organizer.ui import render
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = {"/assets/style.css": (ROOT / "assets/style.css", "text/css; charset=utf-8"),
-          "/assets/app.js": (ROOT / "assets/app.js", "text/javascript; charset=utf-8")}
+          "/assets/app.js": (ROOT / "assets/app.js", "text/javascript; charset=utf-8"),
+          "/favicon.ico": (ROOT / "assets/icon.svg", "image/svg+xml")}
 
 
 class OrganizerServer(HTTPServer):
@@ -84,8 +85,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+        self.send_header("Referrer-Policy", "same-origin")
+        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
         self.end_headers()
         self.wfile.write(body)
 

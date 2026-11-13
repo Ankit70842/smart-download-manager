@@ -11,6 +11,7 @@ from functools import wraps
 
 from organizer.core import Move, file_signature, fingerprint
 from organizer.paths import safe_destination
+from organizer.access import ensure_movable
 
 
 def exclusive(operation):
@@ -96,6 +97,7 @@ class History:
                     raise ValueError("Source is missing or is not a regular file.")
                 if move.signature is None or file_signature(source) != move.signature:
                     raise ValueError("Source changed after preview; preview again before moving it.")
+                ensure_movable(source)
                 if move.destination_root is not None:
                     safe_destination(move.destination_root, destination)
                 elif destination.parent.parent != source.parent:
@@ -193,6 +195,7 @@ class History:
             return "Organized file is missing or its path changed; undo skipped."
         if fingerprint(destination) != move["digest"]:
             return "File contents changed; undo skipped."
+        ensure_movable(destination)
         if not self._identity_matches(destination, move["destination_identity"]):
             return "File identity or metadata changed (possibly replaced); undo skipped."
         return ""

@@ -5,6 +5,7 @@ from pathlib import Path
 from organizer.core import Move, file_signature
 from organizer.paths import folder_root, safe_destination
 from organizer.rules import category_path, classify
+from organizer.access import ensure_movable
 
 INCOMPLETE = {".crdownload", ".part", ".partial", ".tmp", ".download", ".opdownload"}
 
@@ -95,8 +96,7 @@ def preview(folder, settings):
                 entry.skip_reason = "Incomplete download or temporary file"
             else:
                 entry.signature = file_signature(source)
-                with source.open("rb"):
-                    pass
+                ensure_movable(source)
                 result = classify(source.name, settings)
                 entry.category, entry.confidence, entry.reason = result.category, result.confidence, result.reason
                 entry.selected = result.confidence != "Needs review"

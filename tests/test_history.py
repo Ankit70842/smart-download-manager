@@ -70,6 +70,26 @@ class HistoryTests(unittest.TestCase):
         self.assertFalse(source.exists())
         self.assertTrue(destination.exists())
 
+    def test_legacy_journal_migrates_without_losing_entries_and_can_undo(self):
+        import hashlib
+        database = self.root / "legacy.sqlite"
+        original = self.folder / "legacy.txt"
+        (self.folder / "Documents").mkdir()
+        destination = self.folder / "Documents" / original.name
+        destination.write_bytes(b"legacy contents")
+        with sqlite3.connect(database) as db:
+            db.execute("CREATE TABLE moves (id INTEGER PRIMARY KEY, batch TEXT, source TEXT, destination TEXT, digest TEXT, state TEXT, error TEXT DEFAULT '')")
+            db.execute("INSERT INTO moves VALUES (1,?,?,?,?,?,?)", ("legacy-batch", str(original), str(destination), hashlib.sha256(b"legacy contents").hexdigest(), "moved", ""))
+        history = History(database)
+        try:
+            self.assertEqual(history.rows()[0]["batch"], "legacy-batch")
+            self.assertEqual(history.rows()[0]["id"], 1)
+            history.undo_operation("legacy-batch")
+            self.assertEqual(original.read_bytes(), b"legacy contents")
+            self.assertEqual(history.rows()[0]["state"], "undone")
+        finally:
+            history.close()
+
     def test_apply_skips_a_file_replaced_after_preview(self):
         source = self.folder / "a.txt"
         source.write_text("reviewed contents")

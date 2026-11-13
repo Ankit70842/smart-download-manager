@@ -2,6 +2,17 @@ import tests.http_support as support
 
 
 class DashboardTests(support.ServerCase):
+    def test_browser_policy_preserves_same_origin_form_origin(self):
+        import http.client
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            connection.request("GET", "/")
+            response = connection.getresponse()
+            self.assertEqual(response.getheader("Referrer-Policy"), "same-origin")
+            response.read()
+        finally:
+            connection.close()
+
     def test_scan_requires_destination_then_edits_and_confirmed_apply(self):
         folder = self.root / "smart"
         folder.mkdir()

@@ -12,7 +12,10 @@
       for (const row of rows) {
         const category = row.querySelector('select').value;
         row.dataset.category = category;
-        row.hidden = !(row.textContent.toLocaleLowerCase().includes(query) && (!filter.value || filter.value === category));
+        // Do not search every option in the category dropdown: otherwise every
+        // file matches every category, even when that category was not chosen.
+        const text = [row.dataset.name, category, row.cells[4].textContent].join(' ').toLocaleLowerCase();
+        row.hidden = !(text.includes(query) && (!filter.value || filter.value === category));
       }
       count();
     };
