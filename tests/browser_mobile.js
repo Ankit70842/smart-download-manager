@@ -2,7 +2,9 @@
 // Prerequisite: open the local app with at least one history row.
 async page => {
   await page.setViewportSize({width:390,height:844});
-  const lines = await page.getByRole('columnheader',{name:'Status',exact:true}).evaluate(el => {
+  const operation = page.locator('#history .operation').first();
+  if (!(await operation.evaluate(el => el.open))) await operation.locator(':scope > summary').click();
+  const lines = await operation.getByRole('columnheader',{name:'Status',exact:true}).evaluate(el => {
     const range = document.createRange();
     range.selectNodeContents(el);
     return range.getClientRects().length;

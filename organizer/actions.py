@@ -93,6 +93,10 @@ def handle(app, fields):
         if file_id and batch:
             raise ValueError("Choose one file or one operation.")
         app.undo_rows = app.history.preview_undo(batch=batch or None, file_id=int(file_id) if file_id else None)
+        if not app.undo_rows:
+            app.undo_id = ""
+            app.message = "No matching organization or reversible files were found."
+            return
         app.undo_id = secrets.token_urlsafe(24)
         app.message = "Restore preview ready. Nothing restored until you confirm."
     elif action in ("undo_confirm", "undo"):

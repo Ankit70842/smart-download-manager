@@ -2,6 +2,10 @@ import tests.http_support as support
 
 
 class DashboardTests(support.ServerCase):
+    def test_empty_undo_explains_that_no_operation_is_available(self):
+        self.request({"token": self.token, "action": "undo_preview"})
+        self.assertIn("No matching organization", self.request()[1])
+
     def test_browser_policy_preserves_same_origin_form_origin(self):
         import http.client
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
@@ -80,3 +84,21 @@ class DashboardTests(support.ServerCase):
         self.request({"token": self.token, "action": "apply", "plan_id": self.field(html, "plan_id"), "confirmed": "yes",
                       "edits_present": "yes", "selected_0": "yes", "category_0": "../escape"})
         self.assertTrue((folder / "notes.txt").exists())
+
+    def test_an_older_operation_can_be_restored_without_undoing_the_newer_one(self):
+        folder = self.root / "historical"
+        folder.mkdir()
+        def organize(name):
+            (folder / name).write_text(name)
+            self.request({"token": self.token, "action": "preview", "folder": str(folder)})
+            self.request({"token": self.token, "action": "destination", "mode": "inside", "plan_id": self.field(self.request()[1], "plan_id")})
+            self.request({"token": self.token, "action": "apply", "confirmed": "yes", "plan_id": self.field(self.request()[1], "plan_id")})
+        organize("CN.pdf")
+        older = self.field(self.request()[1], "batch")
+        organize("DBMS.pdf")
+        self.request({"token": self.token, "action": "undo_preview", "batch": older})
+        undo_id = self.field(self.request()[1], "undo_id")
+        self.request({"token": self.token, "action": "undo_confirm", "undo_id": undo_id, "confirmed": "yes"})
+        self.assertEqual((folder / "CN.pdf").read_text(), "CN.pdf")
+        self.assertFalse((folder / "DBMS.pdf").exists())
+        self.assertEqual((folder / "Studies" / "DBMS" / "DBMS.pdf").read_text(), "DBMS.pdf")

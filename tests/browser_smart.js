@@ -4,8 +4,12 @@ async page => {
   const source = await page.locator('#folder').inputValue();
   if (!source.includes('smart-review-')) throw new Error('Use the disposable smart-review fixture, never real Downloads');
   const destination = source.replace(/source$/, 'destination');
+  await page.setViewportSize({width:1280,height:900});
   await page.locator('#folder').fill('');
   await page.screenshot({path:'.runtime/smart-dashboard.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:'.runtime/smart-start-mobile.png',fullPage:true});
+  await page.setViewportSize({width:1280,height:900});
   const categories = page.locator('#settings > details').nth(0);
   await categories.locator(':scope > summary').click();
   await categories.getByPlaceholder('Studies/Distributed Systems',{exact:true}).fill('Studies/AI');
@@ -32,7 +36,11 @@ async page => {
   await page.locator('#search').fill('DBMS');
   if (await page.locator('.file-row:visible').count() !== 1) throw new Error('Search should match only the DBMS file');
   await page.locator('#search').fill('');
+  await page.locator('#category-filter').selectOption('Studies/DBMS');
+  if (await page.locator('.file-row:visible').count() !== 1) throw new Error('Category filter failed');
+  await page.locator('#category-filter').selectOption('');
   await page.locator('#sort').selectOption('category');
+  if (await page.locator('.file-row').first().getAttribute('data-category') !== 'Installers') throw new Error('Category sort failed');
   await page.getByRole('button',{name:'Deselect visible',exact:true}).click();
   await row('Computer Networks lecture.pdf').locator('input[type=checkbox]').check();
   await row('DBMS assignment.pptx').locator('input[type=checkbox]').check();
