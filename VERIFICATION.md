@@ -1,5 +1,41 @@
 # Verification — 13 November 2026
 
+## Smart Downloads Manager upgrade (latest)
+
+- Full automated suite: **43 tests, 42 passed, 1 skipped**. The skipped case needs
+  Windows symbolic-link creation permission. The Windows delete-sharing lock
+  regression executes and passes; it is not skipped on this machine.
+- Coverage added: filename subjects across formats, rule ambiguity/priorities,
+  custom category/rule persistence, reserved names, explicit destination choice,
+  traversal protection, exclusions, nested/external moves, timestamp migration,
+  replaced files with identical content, historical/individual/idempotent undo,
+  active-journal protection, partial copy failure, and preview truncation.
+- HTTP coverage exercises the new destination and restore confirmations; old
+  immediate browser undo is no longer permitted. Older-operation restoration,
+  settings approval, cross-site requests, static path allowlisting, and current
+  form IDs are tested. Legacy CLI behavior remains covered separately.
+- Browser test: Playwright CLI 0.1.24 + Chrome, fresh isolated database and new
+  `smart-review-*` fixtures. Custom category/rule → Scan → external destination →
+  search/filter controls and sorting → bulk/per-file changes → Apply (5 successful,
+  1 no-overwrite collision) → individual undo (1) → remaining batch undo (4).
+- Real filesystem check: all eight source files retain original bytes, source
+  subfolder untouched, incomplete file and excluded EXE remain, pre-existing
+  destination invoice unchanged, no extra destination files remain after undo.
+- Chrome console: zero errors/warnings in the clean final scenario. Desktop and
+  390 × 844 mobile screenshots inspected; no page overflow. Published screenshots
+  are actual clean-start captures without private folder paths.
+- A real review-server restart retained custom categories/rules and undo statuses.
+  Before upgrading the normal-account main server, the existing journal was backed
+  up locally; all 16 previous records retained their original fields exactly after
+  migration. No user-data scan or Apply was performed during that upgrade.
+- `python -m compileall -q web_app.py organizer scripts tests` and
+  `node --check assets/app.js`: passed. No transpiler/build framework is required.
+- Cross-filesystem transfer is fault-injected with EXDEV, including disk-full
+  failure. It was not tested on two physical drives. Power-loss durability and
+  hostile concurrent mutation are not claimed.
+
+Earlier check records below describe previous versions, not current feature limits.
+
 ## Executed checks
 
 - `python -m unittest discover -s tests -v`: 22 tests, 21 passed, 1 skipped.

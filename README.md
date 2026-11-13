@@ -1,200 +1,201 @@
-# Open Folder Organizer
+# Smart Downloads Manager
 
-A local tool for turning a cluttered folder into categorized subfolders. Preview
-every proposed move, apply it explicitly, and undo recorded moves without
-overwriting existing files.
+An offline-first Windows utility built on **Open Folder Organizer**. Organize
+downloads by purpose and subject, inspect every suggestion, and restore individual
+files or whole operations when it is safe. Python's standard-library HTTP server,
+SQLite, and a small amount of HTML/CSS/JavaScript power the local dashboard.
 
-## Features
+![Smart Downloads Manager desktop dashboard](docs/screenshots/dashboard.png)
 
-- Categories: Documents, Images, Videos, Audio, Archives, Code, and Other.
-- Top-level scanning; directories, symbolic links, and dot-prefixed files skipped.
-- Preview table, destination conflicts, operation history, and per-file errors.
-- Apply rejects files replaced or changed since preview, and rejects an old tab's
-  form when another tab has generated a newer preview.
-- Exclusive destination creation: existing files are never overwritten.
-- SHA-256 content checks before undo; occupied original paths are preserved.
-- Interrupted-operation reconciliation and a lock preventing simultaneous moves
-  from cooperating app sessions using the same history database.
-- A command-line interface requiring only Python's standard library.
+[View the mobile dashboard](docs/screenshots/mobile.png).
 
-## Quick start — no installation needed
+## Run locally
 
-With Python 3.12 or newer, run:
+Requires Python **3.12+**. No package installation, API key, cloud service, or
+administrator access is needed for the supported browser UI.
 
 ```powershell
 python web_app.py
 ```
 
-Open **http://127.0.0.1:8501**. This browser interface uses only Python's standard
-library and runs with the Python already installed on this machine. Stop it with
-Ctrl+C. If the port is occupied, use `python web_app.py --port 8502`.
-
-The server binds only to localhost and uses a form token to reject unauthorized
-cross-site submissions. It is a personal local tool, not a production web server.
-Do not expose it to a network. Files are never uploaded anywhere.
-
-## Use the application
-
-1. Paste a local folder path and click **Preview files**.
-2. Review each filename, category, and destination conflict.
-3. Check the confirmation and click **Apply these moves**.
-4. Inspect operation history. Use **Undo latest available batch** to reverse
-   eligible moves; changed files and occupied original paths are skipped.
-
-The supported browser UI is handwritten HTML/CSS served by Python's built-in
-`HTTPServer` and `BaseHTTPRequestHandler`. No framework installation is required.
-
-## Troubleshooting access denied
-
-If Preview succeeds but Apply reports `[WinError 5]`, check the operation named in
-history and expand **Server diagnostics**. Reading a folder does not imply that
-the server can create category folders, create hard links, or remove source names.
-
-The diagnostics show the actual OS process account and Python executable. A
-server launched inside an automation sandbox may have less access than your own
-PowerShell session, even if both use the same Python. In one verified case,
-`CodexSandboxOffline` could read `OrganizerTest` but could not create its category
-folders; restarting the same interpreter under the normal user fixed Apply/Undo.
-Environment values such as `USERNAME` and `getpass.getuser()` can be misleading
-when a process inherits another account's environment.
-
-Stop that server and run `whoami`, then `python web_app.py`, in your own normal
-terminal. Check the printed account and interpreter. You do not need to run as
-administrator or grant the sandbox broader access. If it already runs as your
-account, check the specific destination folder's permissions, locked files, and
-filesystem support instead. Test with disposable files before organizing data.
-
-## Optional Streamlit interface
-
-**Experimental and unsupported for the initial release.** `app.py` is a separate
-Streamlit frontend, not the working default interface. It has only been
-syntax-checked; its dependency environment has not been resolved or audited.
-`requirements.txt` is only for that frontend. The default UI and CLI have no
-third-party runtime dependencies.
-
-See [experimental Streamlit notes](docs/EXPERIMENTAL_STREAMLIT.md) for optional
-setup and the observed installation failure.
-
-## Safe demo
+Open **http://127.0.0.1:8501**. Stop with Ctrl+C. If the port is occupied:
 
 ```powershell
-python scripts/create_demo.py
+python web_app.py --port 8502
 ```
 
-This prints a newly generated temporary folder path. Paste that path into the UI.
-The sample `.jpg` contains placeholder text; the organizer categorizes by extension
-and does not claim to validate image formats. No existing files are replaced.
+Start it in your **own normal terminal**, not an automation sandbox. The console
+and **Server diagnostics** show the actual OS process account and interpreter.
+The server binds only to `127.0.0.1`; do not expose it to a network or deploy it as
+a public website. No folder is scanned or organized automatically at startup.
 
-Alternatively, use the printed path in the terminal:
+## Everyday workflow
+
+1. Paste an existing, absolute **source folder** path and click **Scan & Preview**.
+2. Explicitly choose **inside the source** or **a separate existing local folder**,
+   then click **Set destination**. Paths are not silently redirected elsewhere.
+3. Inspect filename/extension, category, exact paths, reason, confidence label, and
+   status. Change a category per file or in bulk; select/deselect files to include.
+4. Search, filter, or sort the preview. **Filtering only hides rows**; use selection
+   controls to exclude them. Uncertain files start excluded.
+5. Check the Apply confirmation and click **Apply these moves**. Current selections
+   and edits are used; conflicts and failures appear in persistent history.
+6. Choose **Undo Last Organization**, **Undo operation**, or **Undo file**. Review
+   the proposed restore paths, then explicitly **Confirm restore**.
+
+Pasting a path is the supported safe equivalent to a folder picker; the app does
+not require desktop-dialog integration. Each file's destination is the explicitly
+chosen root + editable category/subcategory + unchanged original filename.
+
+## Explainable classification
+
+- Categories: **Studies, Projects, Personal, Games, Installers, Media, Unsorted**.
+- Built-in study subjects: **Computer Networks, DBMS, Operating Systems, Maths**.
+- Related PDFs, PPTX, DOCX, TXT, and other formats can share the same subject
+  folder: `Computer Networks notes.pdf` and `CN lecture.pptx` both match networking.
+- Rules use normalized filename words/phrases and optional extension filters.
+  Keywords match any listed phrase; when extensions are supplied, they must also
+  match. Higher integer priority wins. Conflicting categories at equal priority
+  result in **Unsorted / Needs review**.
+- **High**, **Medium**, **Needs review**, and **User choice** are explanatory rule
+  labels, not probabilities or claims of AI accuracy. Each result shows its reason.
+- No document-text extraction, model, chatbot, network lookup, or downloaded-file
+  execution is used. Classification examines filenames, not document contents.
+
+## Custom categories and rules
+
+Under **Categories & rules**, create nested paths such as `Studies/AI`, rename
+categories, or delete them from settings. Deleting a parent also removes its nested
+settings categories and associated rules. **Existing folders/files are never
+renamed or deleted by a settings action.** `Unsorted` remains available.
+
+Create/edit rules with an ID, category, comma-separated keywords, optional
+extensions, and priority (-1000 to 1000). Case-insensitive category conflicts,
+traversal components, invalid Windows names, and reserved device names are rejected.
+Settings persist in SQLite and take effect after a new scan; changing settings
+invalidates an old preview.
+
+Correcting a preview does **not** teach a rule automatically. The separate
+**Save a correction as an explicit filename rule** panel requires approval and
+saves the selected filename stem as a keyword at priority 200. Review the category
+and filename before saving a potentially broad keyword.
+
+## Safety, history, and undo
+
+- Source scanning is top-level only. Directories, links/junctions, dot-prefixed
+  files, incomplete/temporary downloads, unreadable files, and detected Windows
+  read/delete locks are skipped with explanations.
+- Source identity, size, and modification time are checked again before Apply.
+- Existing destination files are **never overwritten**. Symlink/junction category
+  paths and destinations outside the selected root are rejected.
+- Same-filesystem moves create an exclusive hard link before removing the original
+  name. Where links are unsupported or the destination is on another filesystem,
+  an exclusive copy is flushed and verified before the source is removed.
+- Each move records operation ID, UTC timestamp, original/destination paths,
+  SHA-256, destination identity, status, and errors. Destination identity is
+  journaled before the original name is removed, so interrupted work can recover.
+- Undo rechecks contents, identity, original-path availability, and parent paths.
+  Edited, replaced, missing, manually moved, or locked files are skipped safely.
+  Partial undo and repeated undo are supported without overwriting restored files.
+- Ambiguous failures, including a partial copy, preserve files and are marked
+  **review**. Inspect both paths manually; the app does not guess which to delete.
+- Existing journals migrate without deleting their entries. Legacy entries lack
+  new identity/timestamp data; legacy undo uses the original hash/path safeguards.
+- The active journal and sidecars cannot be selected for organization. Empty
+  category folders and unrelated files are not deleted during undo or cleanup.
+
+Data and settings live in `.organizer/history.sqlite`. Keep `.organizer` to retain
+undo/history and custom settings; it is ignored by Git because it contains local
+paths. For an isolated demo database:
 
 ```powershell
-python -m organizer "PATH_PRINTED_BY_DEMO_SCRIPT"
-python -m organizer "PATH_PRINTED_BY_DEMO_SCRIPT" --apply
+python web_app.py --port 8502 --database .runtime/demo-history.sqlite
+```
+
+Host/Origin checks, unpredictable form tokens, escaped HTML, parameterized SQL,
+bounded request bodies, a same-origin-only asset policy, stale-preview IDs, and
+explicit confirmations protect local browser operations. They do not isolate the
+app from malicious programs running as your own user.
+
+## Try disposable files first
+
+```powershell
+python scripts/create_smart_demo.py
+```
+
+The script prints new source/destination paths and writes a manifest under a new
+temporary directory. It includes a collision, an uncertain file, an incomplete
+download, and a subfolder to demonstrate exclusions. Its PDF/PPTX/image/video/EXE
+files contain harmless **placeholder text**; they are never opened as documents or
+executed. Your actual Downloads folder is not accessed.
+
+## Legacy CLI and experimental Streamlit
+
+The original extension-based CLI remains available for backward compatibility;
+it does **not** use smart topic rules:
+
+```powershell
+python -m organizer "C:\Path\To\DisposableFolder"
+python -m organizer "C:\Path\To\DisposableFolder" --apply
 python -m organizer --history
 python -m organizer --undo
 ```
 
-Applying from the terminal requires typing `APPLY`. Preview makes no changes to
-the selected folder. The application creates its local history store separately.
-For isolated demos or tests, pass `--database "PATH_TO_DEMO_HISTORY.sqlite"` on
-every CLI command, including undo. Keep that database outside the scanned files.
+CLI Apply requires typing `APPLY`. Use `--database PATH` consistently for an isolated
+CLI journal. The CLI's `--undo` explicitly requests the original immediate undo
+behavior; restore-preview confirmation is a browser UI feature.
 
-## Design
+`app.py` and `requirements.txt` are an **experimental, unsupported legacy Streamlit
+frontend**. They are not the working smart dashboard or a verified installation
+target. See [Streamlit notes](docs/EXPERIMENTAL_STREAMLIT.md).
 
-```text
-Local browser UI / optional Streamlit UI / CLI
-       |
-  scan and classify ----> preview plan
-       |
-  move service ---------> category folders
-       |
-  SQLite journal -------> reconciliation / guarded undo
-```
-
-`organizer/core.py` builds plans and computes fingerprints. `organizer/history.py`
-records a pending entry before moving a file, then records completion. A move
-creates an exclusive hard link in the category directory and removes the original
-name. This avoids overwriting a destination and avoids copying large file contents.
-It requires same-volume hard-link support, such as a local NTFS folder.
-Moves and undo are not a single filesystem transaction. If linking succeeds but
-unlinking fails, both names remain and the operation is marked `review`. Original
-filesystem error details are retained. Interrupted undo is only marked complete
-when the restored content still matches its recorded SHA-256 fingerprint.
-
-SQLite history lives in `.organizer/history.sqlite` next to the app; keep that
-directory to retain undo information. It is excluded from Git because it contains
-local paths. There are no credentials, API keys, uploads, or environment variables.
-
-## Testing
+## Tests and architecture
 
 ```powershell
 python -m unittest discover -s tests -v
-python -m compileall -q app.py web_app.py organizer scripts
+python -m compileall -q web_app.py organizer scripts tests
+node --check assets/app.js
 ```
 
-Tests use temporary directories and cover classification, collisions, missing
-sources, changed contents, occupied undo paths, interruption recovery, concurrent
-operation locking, partial failures, CLI cancellation, and the complete browser
-HTTP flow (preview, apply, undo, invalid token, escaped input). A real symlink test is
-skipped when the account cannot create symlinks.
+Node is only needed for the optional JavaScript syntax check/browser tooling.
+The automated suite uses disposable folders and isolated databases. It covers
+classification, settings persistence, nested destinations, migration, collisions,
+locks, partial copies, replaced/edited files, restart persistence, historical and
+individual undo, and HTTP validation. One real-symlink test requires Windows
+permission and may be skipped.
 
-See [VERIFICATION.md](VERIFICATION.md) for the actual check results and the optional
-Streamlit installation limitation, and [QUALITY_REVIEW.md](QUALITY_REVIEW.md) for
-the audit. The default UI was exercised with Playwright CLI in Chrome, and desktop
-and mobile screenshots were visually inspected. Browser testing used disposable
-data; automated HTTP/CLI tests use isolated history databases.
+See [verification results](VERIFICATION.md), [design and tradeoffs](docs/SMART_DESIGN.md),
+and [review findings](QUALITY_REVIEW.md). The reusable Playwright scenario and
+setup instructions are in [browser verification](docs/BROWSER_TESTING.md).
 
-With Playwright CLI installed, a reusable mobile regression check is available:
+## Practical limits
 
-```powershell
-playwright-cli open http://127.0.0.1:8501 --browser=chrome
-# First create at least one history row using a disposable sample folder.
-playwright-cli run-code --filename=tests/browser_mobile.js
-playwright-cli close
-```
+- Use trusted, idle local folders. Checks cannot eliminate hostile filesystem races
+  or guarantee recovery after physical storage failure. This is not a backup tool.
+- A scan previews at most **1,000 top-level entries**, with a visible truncation
+  notice. The dashboard shows the latest **50 operations**; older operations can
+  be looked up using their full saved ID. The underlying journal has no retention
+  policy and is still read in full for history grouping.
+- Operations are synchronous. The UI shows indeterminate progress and success
+  totals; it does not report fabricated percentage progress. Large hashes/copies
+  can delay requests. No background watcher or automatic organization is provided.
+- A lock acquired after the scan may still cause Apply to fail; records/files are
+  preserved. Cross-filesystem fallback has fault-injected tests, not physical
+  multi-drive hardware coverage. Copy does not preserve all filesystem metadata.
+- Network paths, recursive organization, automatic duplicate deletion, document
+  content extraction, filename renaming, and arbitrary per-file external roots are
+  outside this version. Per-file categories can differ under the chosen root.
+- A single local workspace/preview is shared across tabs; changing it invalidates
+  stale forms. This is a personal tool, not a multi-user server.
 
-The check resizes the viewport to 390 × 844 and verifies readable history headers
-without page-level horizontal overflow. Browser tooling is optional for running
-the application and is not a production dependency.
+If Apply reports access denied, inspect the named operation and **Server
+diagnostics**. A sandbox-owned server can have less access than your terminal.
+Start `python web_app.py` as your normal user; do not run as administrator or weaken
+Windows security to make it work.
 
-## Limitations
+## License and publication
 
-- Local, trusted folders only. Do not edit or reorganize files from another app
-  while an operation is running; filesystem checks cannot prevent all external
-  races. This is not a backup tool or a security boundary.
-- No recursive scanning, duplicate deletion, or custom category editor.
-- Categories use the last extension; file contents are not inspected for type.
-- Unsupported filesystems, locked files, and permission failures are reported.
-- Undo verifies contents rather than timestamps or full filesystem metadata.
-- Empty category folders remain after undo. No directories are deleted.
-- Ambiguous interrupted moves preserve both names and are marked `review` for
-  manual inspection. Existing destination conflicts are marked `failed` and skipped.
-- Undo targets the newest batch with moves still eligible for undo; earlier
-  batches become available after it has been undone.
-- No retention limit or pagination for history yet. No cloud or multi-machine sync.
-- The single-process UI handles one request/operation at a time. Idle socket reads
-  time out after two seconds; moving or hashing large files can still delay the UI.
-- The local form token and Host check protect against web-based cross-site
-  submissions, not other local programs or users with access to your account.
-- Streamlit dependencies remain unpinned and unaudited as a resolved environment;
-  the optional frontend is outside the verified release surface.
-
-## Roadmap
-
-Optional: report exact duplicate files, configurable category rules, and history
-filtering. Duplicate deletion is deliberately outside the current scope.
-
-## Attribution and publication
-
-Demo records are generated locally. Python's standard library, HTML/CSS, and
-SQLite power the default application; Streamlit is optional. This project is
-licensed under the [MIT License](LICENSE), Copyright (c) 2026 Ankit Chaurasia.
-GitHub publication requires separate explicit approval. See
-[publication proposal](PUBLICATION.md) for suggested repository metadata and scope.
-
-## Interview explanation
-
-“I separated planning from execution so users can inspect changes before moving
-files. Every move is journaled, destinations are created exclusively, and undo
-checks the file's content fingerprint. When a failure leaves ambiguous state,
-the tool preserves files and asks for review instead of guessing.”
+[MIT License](LICENSE) — Copyright (c) 2026 Ankit Chaurasia.
+Git history is preserved. No remote repository, push, tag, release, or public
+deployment is created without explicit approval. Suggested metadata is recorded
+in [PUBLICATION.md](PUBLICATION.md).

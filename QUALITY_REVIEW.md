@@ -1,5 +1,69 @@
 # Final quality review — 13 November 2026
 
+## Smart Downloads Manager review (latest)
+
+The supported UI is now the smart dashboard; older sections below are historical.
+The HTTP server and journal were extended in focused commits, not replaced by a
+framework. The MIT license and all existing Git history remain intact.
+
+### Confirmed upgrade findings, reproduced and fixed
+
+- **Medium: readable Windows files can deny delete sharing.** A failing real-handle
+  regression led to a non-destructive read/delete access probe in preview and Apply.
+  No administrator access, security disabling, or ACL changes are used.
+- **Medium: no-referrer conflicted with strict Origin checking.** Chrome sent
+  `Origin: null`, causing same-origin forms to fail. Header regression + browser
+  reproduction verified the fix: `same-origin` referrer policy, strict Host/Origin
+  checks retained. Cross-site and null-origin submissions remain rejected.
+- **Low: search included every dropdown option.** Browser search matched all
+  categories for every row. Search now uses filename, chosen category, and reason;
+  the same browser regression passed afterward.
+- **Medium: source of truth needs protection.** The active journal and sidecars
+  are explicitly excluded from scanning/moves, beyond ordinary lock detection.
+- **Low: Unicode Windows device aliases.** `COM¹.txt` was accepted as a category;
+  a failing name test led to normalized reserved-name checking.
+- **Low: large preview form growth.** A visible 1,000-entry cap bounds submitted
+  preview controls. Remaining entries are explicitly not processed.
+- **Low: migration test leaked a SQLite connection on Windows.** The fixture now
+  explicitly closes its database; the complete suite passes without that failure.
+
+### Bug review coverage
+
+| Category | Assessment |
+|---|---|
+| AI patterns | Public API/HTTP/browser tests; rule labels are not AI probabilities; no invented document extraction |
+| Errors/resilience | Per-file failures preserved; verified partial-copy recovery; explicit locked/incomplete-file reasons |
+| State/integrity | Additive journal migration, identity + hash checks, explicit roots, settings transactions, partial/idempotent undo |
+| Concurrency | Existing operation lock retained; stale preview/restore IDs rejected; synchronous requests by design |
+| Resources | File handles closed; bounded subprocess/socket/body operations; test fixture leak fixed |
+| APIs/integrations | Updated tests reflect required destination and restore preview; legacy extension CLI retained |
+| Performance | 1,000 preview entries, 50 rendered operations; hashing remains synchronous and journal grouping reads full history |
+| Configuration | Normal-user process identity visible; no third-party runtime dependencies for dashboard |
+| Tests | 43 tests, one real-symlink skip; browser + filesystem verification; EXDEV fault injection rather than physical-drive claim |
+| Documentation | README, architecture, browser instructions, real screenshots, limitations, and metadata updated |
+
+### Security review coverage
+
+| Category | Assessment |
+|---|---|
+| Dependencies | Standard-library dashboard; local Playwright audited separately; Streamlit remains unsupported/unlocked |
+| Secrets | Tracked source/history pattern scan and artifact inventory; runtime DBs, logs, and fixtures ignored |
+| Access/CSRF | Loopback bind, exact Host/Origin, unpredictable token, stale-form protection, explicit Apply/restore/rule approval |
+| Injection | Escaped HTML, bound SQL values, fixed asset allowlist; path/category validation and no file execution |
+| Configuration | Same-origin JS/CSS/images only; no inline scripts, no eval, bounded request parse; local-only server |
+| Infrastructure | No hosting/container/cloud surface added; native access probes do not change permissions |
+| Code | Exclusive link/copy, hash verification, identity recorded before unlink; trusted-idle filesystem assumption explicit |
+| AI/agent | No runtime AI/prompt/execution surface; no real Downloads access during development or verification |
+| CI/CD | No remote actions or workflows added; no fabricated CI evidence |
+| Governance | MIT preserved; no history rewrite, repository creation, push, tag, release, or public deployment |
+
+Remaining limitations: physical multi-drive/power-loss coverage, true adversarial
+filesystem races, skipped symlink creation case, no document extraction, no
+background watcher/measured progress, no arbitrary per-file external roots, and
+unverified optional Streamlit. These are disclosed rather than called complete.
+
+---
+
 ## Follow-up: Apply permission failure
 
 **Medium — configuration/error diagnosis, confirmed and fixed.** The server had

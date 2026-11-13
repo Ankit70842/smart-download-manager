@@ -6,19 +6,21 @@ All original commits must remain intact. No squash, rebase, amend, or force-push
 ## Suggested metadata
 
 - Repository name: `open-folder-organizer`
-- Description: `A local Python file organizer with a browser UI, safe move previews, collision protection, and journaled undo.`
+- Description: `An offline-first Windows downloads manager with explainable filename rules, editable previews, and journaled per-file undo.`
 - Topics: `python`, `file-organizer`, `automation`, `file-management`, `sqlite`,
-  `http-server`, `undo`, `local-first`, `portfolio-project`
+  `http-server`, `undo`, `local-first`, `windows`, `rule-engine`, `portfolio-project`
 - Suggested visibility: public, pending approval.
 - Existing branch: `master`. Keep it unless the owner requests a rename.
-- Proposed first release: `v0.1.0`, an initial feature-complete local utility with
+- Proposed first release: `v0.2.0`, the smart-manager upgrade with
   explicit filesystem and recovery limitations. No tag or release exists yet.
 - GitHub owner: not selected; confirm before any remote creation or push.
 
 ## Supported initial release
 
-Default `web_app.py` HTTP-server browser interface and `python -m organizer` CLI;
-preview, confirmed apply, no-overwrite collisions, SQLite journal, and guarded undo.
+Default `web_app.py` smart HTTP-server dashboard, plus the legacy extension-based
+`python -m organizer` CLI. The dashboard supports explainable filename categories,
+custom rules, explicit destination selection, selected-file Apply, no-overwrite
+collisions, and confirmed historical/individual undo with the existing SQLite journal.
 Python 3.12+, no third-party runtime dependencies for these entry points.
 
 `app.py` and `requirements.txt` remain in source as experimental, unsupported
@@ -48,6 +50,9 @@ a remote repository, pushing commits, or publishing a release.
   release publication require explicit approval; this proposal authorizes none.
 
 ## Preparation verification
+
+The following records describe the earlier publication-preparation milestone.
+Current smart-manager verification is in `VERIFICATION.md`; no remote was created.
 
 - 20 tests executed: 19 passed, 1 Windows symlink-permission skip; syntax checks passed.
 - Ignore rules checked for credentials, local journals/sidecars, runtime tools,

@@ -1,5 +1,8 @@
 # Smart Downloads Manager upgrade
 
+Implemented in local milestones; see VERIFICATION.md for executed checks and
+remaining limits. No real Downloads were used and no remote was published.
+
 Preserve the standard-library HTTP server, legacy extension organizer API/CLI,
 SQLite move journal, MIT license, and all Git commits. No real Downloads access.
 

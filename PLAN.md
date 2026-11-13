@@ -1,5 +1,8 @@
 # Download Folder Organizer
 
+Historical initial plan. See [SMART_PLAN.md](SMART_PLAN.md) and
+[smart design](docs/SMART_DESIGN.md) for the implemented upgrade.
+
 Build a local Python application that scans only top-level regular files, previews
 category destinations, moves without overwriting, and records recoverable history.
 Skip symbolic links and directories. Never delete duplicate files.
