@@ -60,3 +60,15 @@ class WebReviewTests(unittest.TestCase):
         self.assertTrue((first / "notes.txt").exists())
         self.assertTrue((second / "notes.txt").exists(), "A stale form moved files from another preview")
         self.assertIn("Preview changed", self.request()[1])
+
+    def test_non_ascii_form_token_is_rejected_without_dropping_connection(self):
+        status, _ = self.request({"token": "invalid-\u2603", "action": "apply"})
+        self.assertEqual(status, 403)
+        self.assertEqual(self.request()[0], 200)
+
+    def test_apply_requires_explicit_confirmation(self):
+        folder, html = self.preview("confirmation")
+        self.request({"token": self.token, "action": "apply",
+                      "plan_id": self.field(html, "plan_id")})
+        self.assertTrue((folder / "notes.txt").exists())
+        self.assertIn("Confirm the preview", self.request()[1])

@@ -73,7 +73,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         fields = parse_qs(self.rfile.read(length).decode("utf-8", errors="replace"))
         token = fields.get("token", [""])[0]
-        if not secrets.compare_digest(token, app.token):
+        if not token.isascii() or not secrets.compare_digest(token, app.token):
             self.send_error(403)
             return
         action = fields.get("action", [""])[0]
@@ -92,6 +92,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Preview files before applying.")
                 if fields.get("plan_id", [""])[0] != app.plan_id:
                     raise ValueError("Preview changed in another tab; preview again before applying.")
+                if fields.get("confirmed", [""])[0] != "yes":
+                    raise ValueError("Confirm the preview before applying these moves.")
                 batch = app.history.apply(app.plan)
                 app.history.reconcile()
                 rows = [r for r in app.history.rows() if r["batch"] == batch]
@@ -129,7 +131,7 @@ def render(app):
                    f"<tbody>{rows}</tbody></table>" if rows else "<p>No eligible files found.</p>")
         if rows:
             preview += form("apply", f'<input type="hidden" name="plan_id" value="{app.plan_id}">'
-                            '<label class="confirm"><input type="checkbox" required> '
+                            '<label class="confirm"><input type="checkbox" name="confirmed" value="yes" required> '
                             'I reviewed this preview and approve these moves.</label>'
                             '<button>Apply these moves</button>')
     history = app.history.rows()

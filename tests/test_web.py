@@ -54,7 +54,8 @@ class WebTests(unittest.TestCase):
                 self.assertIn("Apply these moves", html)
                 plan_id = re.search(r'name="plan_id" value="([^"]+)"', html).group(1)
                 self.assertTrue(source.exists())
-                request("POST", {"token": token, "action": "apply", "plan_id": plan_id})
+                request("POST", {"token": token, "action": "apply", "plan_id": plan_id,
+                                 "confirmed": "yes"})
                 self.assertFalse(source.exists())
                 self.assertIn("Moved 1 of 1", request("GET")[1])
                 request("POST", {"token": token, "action": "undo"})
