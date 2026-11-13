@@ -5,6 +5,9 @@ category destinations, moves without overwriting, and records recoverable histor
 Skip symbolic links and directories. Never delete duplicate files.
 
 Architecture: Streamlit interface → organizer service → filesystem and SQLite log.
+The default interface is now a dependency-free local HTTP UI (`web_app.py`),
+because this machine's MSYS2 Python cannot readily install Streamlit's scientific
+dependencies. Streamlit remains optional; both interfaces use the same service.
 The database stores each move before execution, including a content fingerprint.
 Undo checks fingerprints and refuses occupied original paths. Interrupted moves
 are reconciled against both paths. One operation at a time is supported.
