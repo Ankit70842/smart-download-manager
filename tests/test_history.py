@@ -2,6 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+import sqlite3
 
 from organizer.core import scan
 from organizer.history import History
@@ -73,3 +74,33 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(self.history.rows()[0]["state"], "moved")
         self.history.undo_latest()
         self.assertTrue((self.folder / "a.txt").exists())
+
+    def test_sessions_cannot_move_concurrently(self):
+        lock = sqlite3.connect(self.history.lock_path)
+        try:
+            lock.execute("BEGIN IMMEDIATE")
+            with self.assertRaises(sqlite3.OperationalError):
+                self.history.apply([])
+        finally:
+            lock.close()
+
+    def test_category_link_is_rejected(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        try:
+            (self.folder / "Documents").symlink_to(outside, target_is_directory=True)
+        except OSError:
+            self.skipTest("Creating symlinks is unavailable for this account")
+        (self.folder / "a.txt").write_text("original")
+        self.history.apply(scan(self.folder))
+        self.assertTrue((self.folder / "a.txt").exists())
+        self.assertEqual(list(outside.iterdir()), [])
+
+    def test_unlink_failure_preserves_both_names_for_review(self):
+        (self.folder / "a.txt").write_text("original")
+        with patch.object(Path, "unlink", side_effect=PermissionError("locked")):
+            self.history.apply(scan(self.folder))
+        self.history.reconcile()
+        self.assertTrue((self.folder / "a.txt").exists())
+        self.assertTrue((self.folder / "Documents" / "a.txt").exists())
+        self.assertEqual(self.history.rows()[0]["state"], "review")

@@ -4,8 +4,22 @@ import os
 from pathlib import Path
 import sqlite3
 import uuid
+from functools import wraps
 
 from organizer.core import Move, fingerprint
+
+
+def exclusive(operation):
+    """Serialize cooperating app sessions using a separate SQLite write lock."""
+    @wraps(operation)
+    def guarded(self, *args, **kwargs):
+        lock = sqlite3.connect(self.lock_path, timeout=0)
+        try:
+            lock.execute("BEGIN IMMEDIATE")
+            return operation(self, *args, **kwargs)
+        finally:
+            lock.close()
+    return guarded
 
 
 def transfer(source: Path, destination: Path):
@@ -17,6 +31,7 @@ def transfer(source: Path, destination: Path):
 class History:
     def __init__(self, database: Path):
         database.parent.mkdir(parents=True, exist_ok=True)
+        self.lock_path = str(database) + ".lock"
         self.db = sqlite3.connect(database)
         self.db.row_factory = sqlite3.Row
         self.db.execute("""CREATE TABLE IF NOT EXISTS moves (
@@ -35,6 +50,7 @@ class History:
                         (state, error, row_id))
         self.db.commit()
 
+    @exclusive
     def apply(self, moves: list[Move]):
         batch = uuid.uuid4().hex
         for move in moves:
@@ -68,7 +84,11 @@ class History:
                     self.update(row_id, "pending", str(error))
         return batch
 
+    @exclusive
     def reconcile(self):
+        self._reconcile()
+
+    def _reconcile(self):
         for row in self.rows():
             if row["state"] not in ("pending", "undoing"):
                 continue
@@ -84,8 +104,9 @@ class History:
             except OSError as error:
                 self.update(row["id"], "review", str(error))
 
+    @exclusive
     def undo_latest(self):
-        self.reconcile()
+        self._reconcile()
         row = self.db.execute(
             "SELECT batch FROM moves WHERE state='moved' ORDER BY id DESC LIMIT 1").fetchone()
         if row is None:
