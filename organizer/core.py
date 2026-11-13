@@ -19,6 +19,12 @@ CATEGORIES = {
 class Move:
     source: Path
     destination: Path
+    signature: tuple[int, int, int, int] | None = None
+
+
+def file_signature(path: Path) -> tuple[int, int, int, int]:
+    info = path.stat(follow_symlinks=False)
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
 
 
 def fingerprint(path: Path) -> str:
@@ -42,5 +48,5 @@ def scan(folder: str | Path) -> list[Move]:
             (name for name, extensions in CATEGORIES.items()
              if extension in extensions.split()), "Other"
         )
-        moves.append(Move(source, root / category / source.name))
+        moves.append(Move(source, root / category / source.name, file_signature(source)))
     return moves

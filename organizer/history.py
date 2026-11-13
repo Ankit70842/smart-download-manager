@@ -6,7 +6,7 @@ import sqlite3
 import uuid
 from functools import wraps
 
-from organizer.core import Move, fingerprint
+from organizer.core import Move, file_signature, fingerprint
 
 
 def exclusive(operation):
@@ -59,6 +59,8 @@ class History:
             try:
                 if source.is_symlink() or not source.is_file():
                     raise ValueError("Source is missing or is not a regular file.")
+                if move.signature is None or file_signature(source) != move.signature:
+                    raise ValueError("Source changed after preview; preview again before moving it.")
                 if destination.parent.parent != source.parent:
                     raise ValueError("Destination must be a category inside the source folder.")
                 parent = destination.parent

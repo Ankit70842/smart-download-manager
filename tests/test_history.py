@@ -31,6 +31,17 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual((self.folder / name).read_bytes(), content)
         self.assertTrue(all(r["state"] == "undone" for r in self.history.rows()))
 
+    def test_apply_skips_a_file_replaced_after_preview(self):
+        source = self.folder / "a.txt"
+        source.write_text("reviewed contents")
+        plan = scan(self.folder)
+        source.unlink()
+        source.write_text("different contents after preview")
+        self.history.apply(plan)
+        self.assertEqual(source.read_text(), "different contents after preview")
+        self.assertFalse((self.folder / "Documents" / "a.txt").exists())
+        self.assertEqual(self.history.rows()[0]["state"], "failed")
+
     def test_collision_preserves_both_files(self):
         (self.folder / "a.txt").write_text("new")
         (self.folder / "Documents").mkdir()
