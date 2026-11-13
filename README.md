@@ -9,6 +9,8 @@ overwriting existing files.
 - Categories: Documents, Images, Videos, Audio, Archives, Code, and Other.
 - Top-level scanning; directories, symbolic links, and dot-prefixed files skipped.
 - Preview table, destination conflicts, operation history, and per-file errors.
+- Apply rejects files replaced or changed since preview, and rejects an old tab's
+  form when another tab has generated a newer preview.
 - Exclusive destination creation: existing files are never overwritten.
 - SHA-256 content checks before undo; occupied original paths are preserved.
 - Interrupted-operation reconciliation and a lock preventing simultaneous moves
@@ -33,19 +35,41 @@ Do not expose it to a network. Files are never uploaded anywhere.
 
 ## Optional Streamlit interface
 
+**Experimental, not the running UI.** The supported default UI is handwritten
+HTML/CSS rendered by `web_app.py` using Python's built-in `HTTPServer` and
+`BaseHTTPRequestHandler`. It uses no React, Flask, FastAPI, or Streamlit framework.
+`app.py` is a separate optional Streamlit frontend; it has not been run with a
+resolved Streamlit dependency environment during this review.
+
 Use Python 3.12 or newer. The command line works with the installed MSYS2 Python;
-the Streamlit UI should use standard Python from python.org, whose Windows wheels
-avoid having to compile scientific dependencies under MSYS2.
+the Streamlit UI should use standard Python from python.org in a **new** environment,
+whose Windows wheels avoid compiling scientific dependencies under MSYS2. The
+existing `.venv` was created by MSYS2 and should not be reused for this frontend.
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1
+# Replace this with the path to your standard python.org installation:
+& "C:\Path\To\Python312\python.exe" -m venv .venv-streamlit
+.\.venv-streamlit\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv-streamlit\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1
 ```
 
-On Linux/macOS replace `.\.venv\Scripts\python.exe` with `.venv/bin/python`.
-Both interfaces run on your computer; enter a local folder path, click **Preview files**,
-review the table, check the confirmation, then click **Apply organization**.
+On Linux/macOS use `python3 -m venv .venv-streamlit` and
+`.venv-streamlit/bin/python` for the remaining commands.
+`requirements.txt` applies only to this optional frontend; the default UI and CLI
+have no third-party runtime dependencies.
+
+The previous install first hit sandbox socket restrictions, then an elevated
+attempt timed out downloading NumPy source. The active interpreter reports
+`mingw_x86_64_ucrt_gnu`, and the `.venv` contains pip but no Streamlit. MSYS2's
+[Python documentation](https://www.msys2.org/docs/python/) explains that its C
+extensions are incompatible with standard CPython wheels. This explains source
+selection; the recorded installation stopped at a network read timeout, not a
+demonstrated compiler failure. Standard CPython is separately installed on the
+review machine but is not the `python` selected by PATH.
+
+In either interface, enter a folder, click **Preview files**, and review the table.
+In the default UI, check the confirmation and click **Apply these moves**; the
+Streamlit button is named **Apply organization**.
 Use **Undo latest available batch** and inspect history for the outcome.
 
 ## Safe demo
@@ -69,6 +93,8 @@ python -m organizer --undo
 
 Applying from the terminal requires typing `APPLY`. Preview makes no changes to
 the selected folder. The application creates its local history store separately.
+For isolated demos or tests, pass `--database "PATH_TO_DEMO_HISTORY.sqlite"` on
+every CLI command, including undo. Keep that database outside the scanned files.
 
 ## Design
 
@@ -87,6 +113,10 @@ records a pending entry before moving a file, then records completion. A move
 creates an exclusive hard link in the category directory and removes the original
 name. This avoids overwriting a destination and avoids copying large file contents.
 It requires same-volume hard-link support, such as a local NTFS folder.
+Moves and undo are not a single filesystem transaction. If linking succeeds but
+unlinking fails, both names remain and the operation is marked `review`. Original
+filesystem error details are retained. Interrupted undo is only marked complete
+when the restored content still matches its recorded SHA-256 fingerprint.
 
 SQLite history lives in `.organizer/history.sqlite` next to the app; keep that
 directory to retain undo information. It is excluded from Git because it contains
@@ -106,8 +136,23 @@ HTTP flow (preview, apply, undo, invalid token, escaped input). A real symlink t
 skipped when the account cannot create symlinks.
 
 See [VERIFICATION.md](VERIFICATION.md) for the actual check results and the optional
-Streamlit installation limitation. The default browser interface has been tested
-through real HTTP requests; no manual visual inspection is claimed.
+Streamlit installation limitation, and [QUALITY_REVIEW.md](QUALITY_REVIEW.md) for
+the audit. The default UI was exercised with Playwright CLI in Chrome, and desktop
+and mobile screenshots were visually inspected. Browser testing used disposable
+data; automated HTTP/CLI tests use isolated history databases.
+
+With Playwright CLI installed, a reusable mobile regression check is available:
+
+```powershell
+playwright-cli open http://127.0.0.1:8501 --browser=chrome
+# First create at least one history row using a disposable sample folder.
+playwright-cli run-code --filename=tests/browser_mobile.js
+playwright-cli close
+```
+
+The check resizes the viewport to 390 × 844 and verifies readable history headers
+without page-level horizontal overflow. Browser tooling is optional for running
+the application and is not a production dependency.
 
 ## Limitations
 
@@ -124,6 +169,12 @@ through real HTTP requests; no manual visual inspection is claimed.
 - Undo targets the newest batch with moves still eligible for undo; earlier
   batches become available after it has been undone.
 - No retention limit or pagination for history yet. No cloud or multi-machine sync.
+- The single-process UI handles one request/operation at a time. Idle socket reads
+  time out after two seconds; moving or hashing large files can still delay the UI.
+- The local form token and Host check protect against web-based cross-site
+  submissions, not other local programs or users with access to your account.
+- Streamlit dependencies remain unpinned and unaudited as a resolved environment;
+  the optional frontend is outside the verified release surface.
 
 ## Roadmap
 
@@ -132,8 +183,9 @@ filtering. Duplicate deletion is deliberately outside the current scope.
 
 ## Attribution and publication
 
-Demo records are generated locally. Python, SQLite, and Streamlit are the main
-tools. No project license has been selected yet. This project is local; GitHub
+Demo records are generated locally. Python's standard library, HTML/CSS, and
+SQLite power the default application; Streamlit is optional. No project license
+has been selected yet. This project is local; GitHub
 publication and a license choice require the owner's approval.
 
 ## Interview explanation
