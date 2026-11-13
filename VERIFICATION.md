@@ -18,7 +18,12 @@
 - Source/history sensitive-pattern scan and tracked historical-file inventory
   are part of the final publication gate. Local Git author metadata is retained.
 - CI is configured for Windows Python 3.12/3.13; hosted execution and remote
-  repository verification await approval and the first push.
+  repository verification were completed after the owner's approval. Both jobs
+  passed on the [initial public push](https://github.com/Ankit70842/smart-download-manager/actions/runs/43510775124).
+- The public `Ankit70842/smart-download-manager` repository was created empty and
+  received the complete 32-commit initial publication history on `main`, without
+  force-pushing. API verification matched remote/local SHA and all commit IDs,
+  confirmed the default branch, README/license, and excluded local artifacts.
 
 The dated sections below record earlier development checks.
 

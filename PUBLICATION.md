@@ -1,7 +1,7 @@
-# Publication candidate — 14 November 2026
+# Publication record — 14 November 2026
 
-Status: prepared locally. Public repository creation and pushing require the
-owner's explicit approval immediately before those actions. Neither has occurred.
+Status: **published after the owner's explicit approval**. Repository:
+[Ankit70842/smart-download-manager](https://github.com/Ankit70842/smart-download-manager).
 
 ## Concrete destination
 
@@ -9,17 +9,16 @@ owner's explicit approval immediately before those actions. Neither has occurred
 - Repository: **smart-download-manager**.
 - Visibility: **public**.
 - Target/default branch: **main**. The local `master` branch was renamed without
-  rewriting commits. There is no configured remote yet.
-- Proposed URL: `https://github.com/Ankit70842/smart-download-manager`.
+  rewriting commits. `origin` uses the credential-free HTTPS repository URL.
+- URL: `https://github.com/Ankit70842/smart-download-manager`.
 - Description: `An offline-first Windows downloads manager with explainable filename rules, a simple review workflow, and safe journaled undo.`
 - Topics: `python`, `windows`, `file-organizer`, `automation`, `sqlite`,
   `local-first`, `file-management`, `rule-engine`, `portfolio-project`.
 - License: existing MIT, Copyright (c) 2026 Ankit Chaurasia.
 
-The initial GitHub lookup returned 404. Recheck immediately before creating it. If
-absent, create an **empty** repository without an auto-generated README, license,
-or initial commit. If an existing repository is found, inspect its branches and
-history before proceeding; do not overwrite or force-push unrelated history.
+The repository did not exist. It was created empty and public, with no generated
+README/license/initial commit. A normal non-force push uploaded the existing Git
+history directly; no merge, squash, rebase, or replacement history was needed.
 
 ## Content and history
 
@@ -50,21 +49,25 @@ undo data on disk; it is not part of the publication artifact.
 - Tracked-source/history credential-pattern scan, ignore probes, and historical
   file inventory are checked before approval. Pattern scans are not a proof of
   detecting every possible credential format.
-- Windows CI for Python 3.12/3.13 is configured with pinned official actions,
-  read-only permissions, and no persisted checkout credential. Its hosted result
-  is pending the first approved push; Python 3.13 was not tested locally.
+- Windows CI for Python 3.12/3.13 uses pinned official actions, read-only
+  permissions, and no persisted checkout credential. Both hosted jobs passed on
+  the [initial push](https://github.com/Ankit70842/smart-download-manager/actions/runs/43510775124).
+  Python 3.13 was tested in hosted CI rather than locally.
 - Existing limitations remain: synchronous work, trusted idle local folders,
   bounded previews, unbounded stored journal, no physical multi-drive/power-loss
   validation, one skipped symlink test, unsupported Streamlit.
 
-## After approval
+## Publication verification
 
-Create the public repository if absent, configure the credential-free HTTPS
-remote URL, and perform a normal non-force push of `main` with complete history.
-Verify the remote commit SHA, default branch, visibility, commit count/ancestry,
-README/license, and CI status. Report the actual repository URL and final Git
-status. Git CLI authentication may require a local sign-in: no saved GitHub
-account was listed by Git Credential Manager during preparation. Credentials
-must not be pasted into chat or embedded in a URL or repository file.
+The first push contained **32 commits** through
+`bf1214f2495f6596782a26c56fd9bdc923d153df`: all 29 original commits and three
+preparation commits. Remote/local commit sets, public visibility, default `main`,
+README, MIT license, and the 48-file source tree were verified via GitHub's API.
+The follow-up publication-record commit preserves that full ancestry.
 
-Do not create a tag, release, or public demo as part of this approval proposal.
+The owner completed local Git Credential Manager authentication. No password or
+token was pasted into chat, embedded in a remote URL, or committed to source.
+Current checks use the normal credential manager without printing credentials.
+
+No tag, release, or public demo was created. The published project remains a
+local application, not a publicly hosted file-management service.

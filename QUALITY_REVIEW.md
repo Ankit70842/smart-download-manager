@@ -15,6 +15,10 @@ setup/stack/structure, and a concrete owner/repository/main-branch proposal. CI 
 not claimed to have run on GitHub before publication. Remote creation/push remain
 pending explicit approval, and local GitHub sign-in may be needed for Git push.
 
+Publication outcome: the owner subsequently approved creation/push and completed
+local sign-in. The repository was created public, full history pushed normally,
+and remote ancestry/content verified. Both Windows Python 3.12/3.13 CI jobs passed.
+
 Source/history scanning checks tracked artifacts rather than trusting ignore
 rules alone. No local database, user Downloads content, credentials, generated
 test files, or browser traces are intended for upload. Existing author metadata

@@ -202,8 +202,9 @@ setup instructions are in [browser verification](docs/BROWSER_TESTING.md).
 
 The included GitHub Actions workflow runs the Python suite and syntax checks on
 Windows with Python 3.12 and 3.13. Browser checks remain a separate local workflow.
-The workflow is configured; its first hosted result is pending publication. No
-passing CI badge or hosted build result is claimed here.
+See the [Windows test workflow](https://github.com/Ankit70842/smart-download-manager/actions/workflows/tests.yml)
+for hosted results. The initial public push passed both Python versions; the
+latest run is available at that link.
 
 ## Project structure
 
