@@ -7,3 +7,32 @@ __pycache__/
 .ruff_cache/
 .runtime/
 .playwright-cli/
+
+# Local credentials and configuration (safe examples may be committed).
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+credentials.json
+service-account.json
+
+# Local databases and their journal/lock sidecars.
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-*
+*.sqlite3-*
+*.db-*
+*.sqlite.lock
+*.sqlite3.lock
+*.db.lock
+
+# Tool output and OS metadata.
+*.log
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db
+Desktop.ini

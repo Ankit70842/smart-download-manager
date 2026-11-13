@@ -1,4 +1,4 @@
-# Download Folder Organizer
+# Open Folder Organizer
 
 A local tool for turning a cluttered folder into categorized subfolders. Preview
 every proposed move, apply it explicitly, and undo recorded moves without
@@ -33,44 +33,27 @@ The server binds only to localhost and uses a form token to reject unauthorized
 cross-site submissions. It is a personal local tool, not a production web server.
 Do not expose it to a network. Files are never uploaded anywhere.
 
+## Use the application
+
+1. Paste a local folder path and click **Preview files**.
+2. Review each filename, category, and destination conflict.
+3. Check the confirmation and click **Apply these moves**.
+4. Inspect operation history. Use **Undo latest available batch** to reverse
+   eligible moves; changed files and occupied original paths are skipped.
+
+The supported browser UI is handwritten HTML/CSS served by Python's built-in
+`HTTPServer` and `BaseHTTPRequestHandler`. No framework installation is required.
+
 ## Optional Streamlit interface
 
-**Experimental, not the running UI.** The supported default UI is handwritten
-HTML/CSS rendered by `web_app.py` using Python's built-in `HTTPServer` and
-`BaseHTTPRequestHandler`. It uses no React, Flask, FastAPI, or Streamlit framework.
-`app.py` is a separate optional Streamlit frontend; it has not been run with a
-resolved Streamlit dependency environment during this review.
+**Experimental and unsupported for the initial release.** `app.py` is a separate
+Streamlit frontend, not the working default interface. It has only been
+syntax-checked; its dependency environment has not been resolved or audited.
+`requirements.txt` is only for that frontend. The default UI and CLI have no
+third-party runtime dependencies.
 
-Use Python 3.12 or newer. The command line works with the installed MSYS2 Python;
-the Streamlit UI should use standard Python from python.org in a **new** environment,
-whose Windows wheels avoid compiling scientific dependencies under MSYS2. The
-existing `.venv` was created by MSYS2 and should not be reused for this frontend.
-
-```powershell
-# Replace this with the path to your standard python.org installation:
-& "C:\Path\To\Python312\python.exe" -m venv .venv-streamlit
-.\.venv-streamlit\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv-streamlit\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1
-```
-
-On Linux/macOS use `python3 -m venv .venv-streamlit` and
-`.venv-streamlit/bin/python` for the remaining commands.
-`requirements.txt` applies only to this optional frontend; the default UI and CLI
-have no third-party runtime dependencies.
-
-The previous install first hit sandbox socket restrictions, then an elevated
-attempt timed out downloading NumPy source. The active interpreter reports
-`mingw_x86_64_ucrt_gnu`, and the `.venv` contains pip but no Streamlit. MSYS2's
-[Python documentation](https://www.msys2.org/docs/python/) explains that its C
-extensions are incompatible with standard CPython wheels. This explains source
-selection; the recorded installation stopped at a network read timeout, not a
-demonstrated compiler failure. Standard CPython is separately installed on the
-review machine but is not the `python` selected by PATH.
-
-In either interface, enter a folder, click **Preview files**, and review the table.
-In the default UI, check the confirmation and click **Apply these moves**; the
-Streamlit button is named **Apply organization**.
-Use **Undo latest available batch** and inspect history for the outcome.
+See [experimental Streamlit notes](docs/EXPERIMENTAL_STREAMLIT.md) for optional
+setup and the observed installation failure.
 
 ## Safe demo
 
@@ -185,8 +168,10 @@ filtering. Duplicate deletion is deliberately outside the current scope.
 
 Demo records are generated locally. Python's standard library, HTML/CSS, and
 SQLite power the default application; Streamlit is optional. No project license
-has been selected yet. This project is local; GitHub
-publication and a license choice require the owner's approval.
+has been selected yet. A license will be added only after the owner's approval;
+the project is not currently offered under an open-source license. GitHub
+publication also requires explicit approval. See
+[publication proposal](PUBLICATION.md) for suggested repository metadata and scope.
 
 ## Interview explanation
 
