@@ -41,3 +41,55 @@ class SmartTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 plan.choose_destination(root)
             self.assertIsNone(plan.destination_root)
+
+    def test_separate_destination_nested_move_and_undo_round_trip(self):
+        from organizer.smart import preview
+        from organizer.rules import default_settings
+        from organizer.history import History
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            source, target = root / "source", root / "target"
+            source.mkdir()
+            target.mkdir()
+            original = source / "DBMS notes.pptx"
+            original.write_bytes(b"study notes")
+            plan = preview(source, default_settings())
+            plan.choose_destination(target)
+            history = History(root / "history.sqlite")
+            try:
+                batch = history.apply(plan.moves())
+                moved = target / "Studies" / "DBMS" / original.name
+                self.assertEqual(moved.read_bytes(), b"study notes")
+                self.assertFalse(original.exists())
+                self.assertTrue(history.rows()[0]["created_at"])
+                self.assertEqual(history.rows()[0]["batch"], batch)
+                history.undo_latest()
+                self.assertEqual(original.read_bytes(), b"study notes")
+            finally:
+                history.close()
+
+    def test_cross_volume_fallback_preserves_contents_and_never_overwrites(self):
+        import errno
+        from unittest.mock import patch
+        from organizer.history import History
+        from organizer.smart import preview
+        from organizer.rules import default_settings
+        with TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            source, target = root / "source", root / "target"
+            source.mkdir()
+            target.mkdir()
+            original = source / "CN.pdf"
+            original.write_bytes(b"large enough study contents")
+            plan = preview(source, default_settings())
+            plan.choose_destination(target)
+            history = History(root / "history.sqlite")
+            try:
+                with patch("os.link", side_effect=OSError(errno.EXDEV, "Different device")):
+                    history.apply(plan.moves())
+                    self.assertFalse(original.exists())
+                    self.assertEqual((target / "Studies" / "Computer Networks" / "CN.pdf").read_bytes(), b"large enough study contents")
+                    history.undo_latest()
+                self.assertEqual(original.read_bytes(), b"large enough study contents")
+            finally:
+                history.close()

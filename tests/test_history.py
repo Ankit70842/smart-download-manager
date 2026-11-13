@@ -31,6 +31,45 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual((self.folder / name).read_bytes(), content)
         self.assertTrue(all(r["state"] == "undone" for r in self.history.rows()))
 
+    def test_individual_and_older_operation_undo_are_persistent_and_idempotent(self):
+        first = self.folder / "first.txt"
+        first.write_text("first")
+        batch = self.history.apply(scan(self.folder))
+        first_id = self.history.rows()[0]["id"]
+        (self.folder / "second.txt").write_text("second")
+        (self.folder / "third.txt").write_text("third")
+        self.history.apply(scan(self.folder))
+        self.history.close()
+        self.history = History(self.root / "history.sqlite")
+        check = self.history.preview_undo(batch=batch)
+        self.assertEqual(len(check), 1)
+        self.assertTrue(check[0]["can_undo"])
+        self.history.undo_file(first_id)
+        self.history.undo_file(first_id)
+        self.assertEqual(first.read_text(), "first")
+        self.assertFalse((self.folder / "second.txt").exists())
+        self.history.undo_operation(batch)
+        self.assertEqual(first.read_text(), "first")
+        remaining = next(row for row in self.history.rows() if Path(row["source"]).name == "second.txt")
+        self.history.undo_file(remaining["id"])
+        self.assertTrue((self.folder / "second.txt").exists())
+        self.assertFalse((self.folder / "third.txt").exists())
+
+    def test_identical_content_replacement_is_not_silently_undone(self):
+        source = self.folder / "a.txt"
+        source.write_text("same bytes")
+        self.history.apply(scan(self.folder))
+        row = self.history.rows()[0]
+        destination = Path(row["destination"])
+        replacement = self.folder / "replacement"
+        replacement.write_text("same bytes")
+        replacement.replace(destination)
+        check = self.history.preview_undo(file_id=row["id"])
+        self.assertFalse(check[0]["can_undo"])
+        self.history.undo_file(row["id"])
+        self.assertFalse(source.exists())
+        self.assertTrue(destination.exists())
+
     def test_apply_skips_a_file_replaced_after_preview(self):
         source = self.folder / "a.txt"
         source.write_text("reviewed contents")
