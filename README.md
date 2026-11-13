@@ -4,15 +4,37 @@ An offline-first Windows utility built on **Open Folder Organizer**. Organize
 downloads by purpose and subject, inspect every suggestion, and restore individual
 files or whole operations when it is safe. Python's standard-library HTTP server,
 SQLite, and a small amount of HTML/CSS/JavaScript power the local dashboard.
+Built for Windows users who want a readable plan before organizing files, with
+an audit trail and a safe way to undo changes.
 
 ![Smart Downloads Manager desktop dashboard](docs/screenshots/dashboard.png)
 
 [View the mobile dashboard](docs/screenshots/mobile.png).
 
+## Technology stack
+
+| Area | Implementation |
+|---|---|
+| Runtime | Python 3.12+; standard library only for the supported app |
+| Local server | `http.server.HTTPServer`, bound to loopback |
+| Interface | Server-rendered HTML, CSS, and vanilla JavaScript |
+| Storage | SQLite settings and operation journal |
+| Classification | Deterministic filename/extension rules; no AI service |
+| Integrity | SHA-256 plus filesystem identity and metadata |
+| Verification | `unittest`, real HTTP tests, optional Playwright + Chrome |
+
 ## Run locally
 
 Requires Python **3.12+**. No package installation, API key, cloud service, or
 administrator access is needed for the supported browser UI.
+
+Clone the repository (or download and extract its ZIP), then open a terminal in
+the project folder:
+
+```powershell
+git clone https://github.com/Ankit70842/smart-download-manager.git
+cd smart-download-manager
+```
 
 ```powershell
 python web_app.py
@@ -84,8 +106,8 @@ traversal components, invalid Windows names, and reserved device names are rejec
 Settings persist in SQLite and take effect after a new scan; changing settings
 invalidates an old preview.
 
-Correcting a preview does **not** teach a rule automatically. The separate
-**Save a correction as an explicit filename rule** panel requires approval and
+Correcting a preview does **not** teach a rule automatically. Under Advanced, the
+**Save a filename correction as a rule** panel requires approval and
 saves the selected filename stem as a keyword at priority 200. Review the category
 and filename before saving a potentially broad keyword.
 
@@ -178,6 +200,38 @@ See [verification results](VERIFICATION.md), [design and tradeoffs](docs/SMART_D
 and [review findings](QUALITY_REVIEW.md). The reusable Playwright scenario and
 setup instructions are in [browser verification](docs/BROWSER_TESTING.md).
 
+The included GitHub Actions workflow runs the Python suite and syntax checks on
+Windows with Python 3.12 and 3.13. Browser checks remain a separate local workflow.
+The workflow is configured; its first hosted result is pending publication. No
+passing CI badge or hosted build result is claimed here.
+
+## Project structure
+
+```text
+smart-download-manager/
+├── web_app.py                 # Local HTTP entry point and request protection
+├── organizer/
+│   ├── actions.py             # Scan, review, confirm, settings, and undo flows
+│   ├── smart.py               # Editable smart previews and file selection
+│   ├── rules.py               # Explainable filename classification
+│   ├── settings.py            # Persistent categories and rules
+│   ├── history.py             # Migration, safe transfer, journal, and undo
+│   ├── paths.py / access.py   # Destination boundaries and Windows access checks
+│   ├── ui.py                  # The simple three-step interface
+│   └── core.py / __main__.py  # Legacy extension-based CLI
+├── assets/                    # Local CSS, JavaScript, and icon
+├── scripts/                   # Disposable demo generators
+├── tests/                     # Unit, HTTP, filesystem, and browser checks
+├── docs/                      # Screenshots, architecture, and browser instructions
+├── .github/workflows/tests.yml
+├── app.py / requirements.txt  # Experimental legacy Streamlit frontend
+└── LICENSE                    # MIT
+```
+
+The ignored `.organizer/` and `.runtime/` directories are local state and test
+output, not distributable project data. See [SECURITY.md](SECURITY.md) for the
+trust boundary, private-data handling, and reporting guidance.
+
 ## Practical limits
 
 - Use trusted, idle local folders. Checks cannot eliminate hostile filesystem races
@@ -203,9 +257,11 @@ diagnostics**. A sandbox-owned server can have less access than your terminal.
 Start `python web_app.py` as your normal user; do not run as administrator or weaken
 Windows security to make it work.
 
-## License and publication
+## Small roadmap
+
+Optional future work: a native folder picker, paginated journal queries, and
+measured progress for long operations. These are not implemented features.
+
+## License
 
 [MIT License](LICENSE) — Copyright (c) 2026 Ankit Chaurasia.
-Git history is preserved. No remote repository, push, tag, release, or public
-deployment is created without explicit approval. Suggested metadata is recorded
-in [PUBLICATION.md](PUBLICATION.md).

@@ -1,66 +1,70 @@
-# GitHub publication proposal
+# Publication candidate — 14 November 2026
 
-Status: prepared locally; no remote repository, push, tag, or release created.
-All original commits must remain intact. No squash, rebase, amend, or force-push.
+Status: prepared locally. Public repository creation and pushing require the
+owner's explicit approval immediately before those actions. Neither has occurred.
 
-## Suggested metadata
+## Concrete destination
 
-- Repository name: `open-folder-organizer`
-- Description: `An offline-first Windows downloads manager with explainable filename rules, editable previews, and journaled per-file undo.`
-- Topics: `python`, `file-organizer`, `automation`, `file-management`, `sqlite`,
-  `http-server`, `undo`, `local-first`, `windows`, `rule-engine`, `portfolio-project`
-- Suggested visibility: public, pending approval.
-- Existing branch: `master`. Keep it unless the owner requests a rename.
-- Proposed first release: `v0.2.0`, the smart-manager upgrade with
-  explicit filesystem and recovery limitations. No tag or release exists yet.
-- GitHub owner: not selected; confirm before any remote creation or push.
+- Owner: **Ankit70842** (confirmed by the connected GitHub account).
+- Repository: **smart-download-manager**.
+- Visibility: **public**.
+- Target/default branch: **main**. The local `master` branch was renamed without
+  rewriting commits. There is no configured remote yet.
+- Proposed URL: `https://github.com/Ankit70842/smart-download-manager`.
+- Description: `An offline-first Windows downloads manager with explainable filename rules, a simple review workflow, and safe journaled undo.`
+- Topics: `python`, `windows`, `file-organizer`, `automation`, `sqlite`,
+  `local-first`, `file-management`, `rule-engine`, `portfolio-project`.
+- License: existing MIT, Copyright (c) 2026 Ankit Chaurasia.
 
-## Supported initial release
+The initial GitHub lookup returned 404. Recheck immediately before creating it. If
+absent, create an **empty** repository without an auto-generated README, license,
+or initial commit. If an existing repository is found, inspect its branches and
+history before proceeding; do not overwrite or force-push unrelated history.
 
-Default `web_app.py` smart HTTP-server dashboard, plus the legacy extension-based
-`python -m organizer` CLI. The dashboard supports explainable filename categories,
-custom rules, explicit destination selection, selected-file Apply, no-overwrite
-collisions, and confirmed historical/individual undo with the existing SQLite journal.
-Python 3.12+, no third-party runtime dependencies for these entry points.
+## Content and history
 
-`app.py` and `requirements.txt` remain in source as experimental, unsupported
-Streamlit material. They are not the running UI or a tested installation target.
+Preserve all **29 pre-preparation commits** through `b933e67`, plus the new focused
+security, CI, and documentation preparation commits. No squash, rebase, amend,
+reset, author changes, or force-push. Author names/emails already in Git metadata
+will remain visible in the public history.
 
-## Approved license
+Include the working simple HTTP dashboard, existing CLI, supported source/tests,
+MIT license, actual screenshots, design/review documents, and CI configuration.
+Streamlit remains clearly experimental/unsupported. No UI redesign or runtime
+feature changes were made for this publication preparation.
 
-The owner approved the MIT License for this utility. It is short and permissive,
-with preservation of copyright/license notices.
-See [MIT license summary](https://choosealicense.com/licenses/mit/).
+Exclude local journals/settings, personal Downloads files, runtime fixtures,
+secrets, credentials, environments, editor state, logs, and caches. Keep local
+undo data on disk; it is not part of the publication artifact.
 
-The root `LICENSE` contains the standard MIT text with
-`Copyright (c) 2026 Ankit Chaurasia`. License approval does not authorize creating
-a remote repository, pushing commits, or publishing a release.
+## Verification and limits
 
-## Publication checks
+- Python suite: **49 tests, 48 passed, 1 permission-related symlink skip**, on
+  MSYS2 Python 3.12.7 and standard CPython 3.12.4.
+- Python compilation and bundled JavaScript syntax checks passed.
+- Chrome/Playwright: Scan → grouped Preview → final confirmation → Organize →
+  Undo passed using new disposable workspace fixtures. Actual contents were
+  checked before confirmation and after undo; collisions/directories preserved.
+- Desktop/mobile screenshots match the existing interface. Browser console had
+  no errors or warnings in the test workflow.
+- Tracked-source/history credential-pattern scan, ignore probes, and historical
+  file inventory are checked before approval. Pattern scans are not a proof of
+  detecting every possible credential format.
+- Windows CI for Python 3.12/3.13 is configured with pinned official actions,
+  read-only permissions, and no persisted checkout credential. Its hosted result
+  is pending the first approved push; Python 3.13 was not tested locally.
+- Existing limitations remain: synchronous work, trusted idle local folders,
+  bounded previews, unbounded stored journal, no physical multi-drive/power-loss
+  validation, one skipped symlink test, unsupported Streamlit.
 
-- Keep source, tests, demo generator, README, planning, verification, and review docs.
-- Exclude local journals, credentials/configuration, virtual environments, failed
-  downloads, browser tooling, screenshots, caches, and machine-specific output.
-- Preserve `.organizer` locally because it may be needed for undo; never upload it.
-- Run tests and scan the content actually tracked by Git, including history.
-- Commit preparation changes as new focused commits, preserving the original
-  16-commit history ending at `7745827c1e6b3ceab6917e53ea654aac2c5dbf27`.
-- Before publication, confirm owner, repository name, visibility, target branch,
-  license decision, and the exact actions approved. Remote creation, push, and
-  release publication require explicit approval; this proposal authorizes none.
+## After approval
 
-## Preparation verification
+Create the public repository if absent, configure the credential-free HTTPS
+remote URL, and perform a normal non-force push of `main` with complete history.
+Verify the remote commit SHA, default branch, visibility, commit count/ancestry,
+README/license, and CI status. Report the actual repository URL and final Git
+status. Git CLI authentication may require a local sign-in: no saved GitHub
+account was listed by Git Credential Manager during preparation. Credentials
+must not be pasted into chat or embedded in a URL or repository file.
 
-The following records describe the earlier publication-preparation milestone.
-Current smart-manager verification is in `VERIFICATION.md`; no remote was created.
-
-- 20 tests executed: 19 passed, 1 Windows symlink-permission skip; syntax checks passed.
-- Ignore rules checked for credentials, local journals/sidecars, runtime tools,
-  environments, and cache files; safe `.env.example` and `.env.sample` remain allowed.
-- Tracked working content and Git history checked for credential patterns; no
-  candidates found. Pattern scans are not a guarantee of detecting every secret.
-- Removed incomplete Python downloads/environment, disposable review data,
-  browser snapshots, temporary browser scripts, and bytecode caches.
-- Local undo history and reusable ignored browser tooling retained.
-- Existing commit author names/emails remain in Git metadata and would be visible
-  in a public repository. They were deliberately not rewritten.
+Do not create a tag, release, or public demo as part of this approval proposal.

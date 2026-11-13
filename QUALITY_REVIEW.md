@@ -1,5 +1,25 @@
 # Final quality review — 13 November 2026
 
+## Publication follow-up — 14 November 2026
+
+The current code, path/transfer/journal checks, rules/settings, HTTP protections,
+test isolation, and asset handling were reviewed again. No newly confirmed
+blocking runtime bug or security defect was found within the documented local,
+trusted-idle-filesystem scope. The simple interface and runtime source are
+unchanged. All 49 tests completed with one known permission skip, and the real
+disposable browser/filesystem flow passed again.
+
+Publication gaps addressed in focused commits: broader private-file exclusions,
+SECURITY.md, an official-action-SHA-pinned read-only Windows CI workflow, README
+setup/stack/structure, and a concrete owner/repository/main-branch proposal. CI is
+not claimed to have run on GitHub before publication. Remote creation/push remain
+pending explicit approval, and local GitHub sign-in may be needed for Git push.
+
+Source/history scanning checks tracked artifacts rather than trusting ignore
+rules alone. No local database, user Downloads content, credentials, generated
+test files, or browser traces are intended for upload. Existing author metadata
+and all 29 earlier commits are preserved. Remaining limits below are unchanged.
+
 ## Simplified UI review (latest)
 
 Main controls are reduced to Scan Downloads → grouped folder review → Organize.

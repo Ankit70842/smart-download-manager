@@ -1,4 +1,28 @@
-# Verification — 13 November 2026
+# Verification
+
+## Public portfolio preparation — 14 November 2026
+
+- All 29 previous commits through `b933e67` are preserved. Local branch renamed
+  from `master` to `main`; no history rewriting or force-push.
+- Fresh test runs on MSYS2 Python 3.12.7 and standard CPython 3.12.4:
+  **49 tests: 48 passed, 1 symlink-permission skip**.
+- Python compilation and JavaScript syntax checks passed. Application/UI source
+  is unchanged from the working simplified version.
+- Fresh disposable Chrome workflow: scan, grouped review, advanced controls,
+  external destination, final confirmation, organization, Undo Last, mobile
+  history. No files moved before confirmation. After undo, all eight fixture
+  contents, source directories, and existing destination collision were intact.
+- Browser console: no errors/warnings. Real Downloads was not scanned or modified.
+- New publication ignore probes passed, including environments, secrets, local
+  databases/sidecars, editor state, user-data copies, and safe example exceptions.
+- Source/history sensitive-pattern scan and tracked historical-file inventory
+  are part of the final publication gate. Local Git author metadata is retained.
+- CI is configured for Windows Python 3.12/3.13; hosted execution and remote
+  repository verification await approval and the first push.
+
+The dated sections below record earlier development checks.
+
+## Development verification — 13 November 2026
 
 ## Simplified interface (latest)
 
