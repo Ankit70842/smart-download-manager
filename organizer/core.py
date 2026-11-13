@@ -20,6 +20,7 @@ class Move:
     source: Path
     destination: Path
     signature: tuple[int, int, int, int] | None = None
+    destination_root: Path | None = None
 
 
 def file_signature(path: Path) -> tuple[int, int, int, int]:
